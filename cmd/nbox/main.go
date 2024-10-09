@@ -35,6 +35,7 @@ func main() {
 		fx.Provide(aws.NewSecureParameterStore),
 		fx.Provide(handlers.NewEntryHandler),
 		fx.Provide(handlers.NewBoxHandler),
+		fx.Provide(handlers.NewStaticHandler),
 		fx.Provide(usecases.NewPathUseCase),
 		fx.Provide(usecases.NewEntryUseCase),
 		fx.Provide(usecases.NewBox),

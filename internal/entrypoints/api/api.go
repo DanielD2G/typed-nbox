@@ -19,7 +19,12 @@ type Api struct {
 	Engine http.Handler
 }
 
-func NewApi(box *handlers.BoxHandler, entry *handlers.EntryHandler, healthCheck *health.Health) *Api {
+func NewApi(
+	box *handlers.BoxHandler,
+	entry *handlers.EntryHandler,
+	healthCheck *health.Health,
+	static *handlers.StaticHandler,
+) *Api {
 
 	corsConfig := cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -53,6 +58,9 @@ func NewApi(box *handlers.BoxHandler, entry *handlers.EntryHandler, healthCheck 
 		r.Get("/api/entry/prefix", entry.ListByPrefix)
 		r.Delete("/api/entry/key", entry.DeleteKey)
 		r.Get("/api/track/key", entry.Tracking)
+
+		r.Get("/api/static/environments", static.Environments)
+
 	})
 
 	return &Api{

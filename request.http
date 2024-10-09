@@ -97,6 +97,12 @@ Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
 
 
+
+### all environments
+GET {{baseUrl}}/api/static/environments
+Content-Type: application/json
+Authorization: Basic {{user}} {{pass}}
+
 ### Delete key
 DELETE {{baseUrl}}/api/entry/key?v=widget-x/development3
 Authorization: Basic {{user}} {{pass}}
