@@ -52,6 +52,7 @@ func NewApi(
 		r.Head("/api/box/{service}/{stage}/{template}", box.Exist)
 		r.Get("/api/box/{service}/{stage}/{template}", box.Retrieve)
 		r.Get("/api/box/{service}/{stage}/{template}/build", box.Build)
+		r.Get("/api/box/{service}/{stage}/{template}/vars", box.ListVars)
 
 		r.Post("/api/entry", entry.Upsert)
 		r.Get("/api/entry/key", entry.GetByKey)
