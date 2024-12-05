@@ -7,6 +7,7 @@ import (
 	"nbox/internal/adapters/aws"
 	"nbox/internal/application"
 	"nbox/internal/entrypoints/api"
+	"nbox/internal/entrypoints/api/auth"
 	"nbox/internal/entrypoints/api/handlers"
 	"nbox/internal/entrypoints/api/health"
 	"nbox/internal/usecases"
@@ -42,6 +43,9 @@ func main() {
 		fx.Provide(application.NewConfigFromEnv),
 		fx.Provide(api.NewApi),
 		fx.Provide(health.NewHealthy),
+		fx.Provide(func(config *application.Config) *auth.Authn {
+			return auth.NewAuthn(application.PrefixBasicAuthCredentials, config)
+		}),
 		fx.Invoke(func(api *api.Api, config *application.Config) {
 			done := make(chan error)
 			ctx := context.Background()

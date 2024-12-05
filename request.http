@@ -31,13 +31,19 @@ Content-Type: application/json
 
 
 ### get template
-GET {{baseUrl}}/api/box/widget-x/development/task_definition.json
+GET {{baseUrl}}/api/box/example/development/task_definition.json
+Authorization: Basic {{user}} {{pass}}
+Content-Type: application/json
+
+
+### vars template
+GET {{baseUrl}}/api/box/example/development/task_definition.json/vars
 Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 
 ### build template
-GET {{baseUrl}}/api/box/widget-x/development/task_definition.json/build
+GET {{baseUrl}}/api/box/crossborder-api/development/task_definition.json/build
 Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
@@ -86,7 +92,7 @@ Content-Type: application/json
 
 
 ### Get prefix
-GET {{baseUrl}}/api/entry/prefix?v=widget-x/development3
+GET {{baseUrl}}/api/entry/prefix?v=dr/token-api/
 Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
 
