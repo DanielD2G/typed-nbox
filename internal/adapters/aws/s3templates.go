@@ -5,23 +5,25 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
+	"path"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"go.uber.org/zap"
 )
 
 type s3TemplateStore struct {
 	s3             *s3.Client
 	dynamodbClient *dynamodb.Client
 	config         *application.Config
+	logger         *zap.Logger
 }
 
 type BoxRecord struct {
@@ -30,11 +32,12 @@ type BoxRecord struct {
 	Template models.Template `dynamodbav:"Template"`
 }
 
-func NewS3TemplateStore(s3 *s3.Client, config *application.Config, dynamodb *dynamodb.Client) domain.TemplateAdapter {
+func NewS3TemplateStore(s3 *s3.Client, config *application.Config, dynamodb *dynamodb.Client, logger *zap.Logger) domain.TemplateAdapter {
 	return &s3TemplateStore{
 		s3:             s3,
 		dynamodbClient: dynamodb,
 		config:         config,
+		logger:         logger,
 	}
 }
 
@@ -59,21 +62,23 @@ func (b *s3TemplateStore) store(ctx context.Context, path string, stage models.S
 }
 
 func (b *s3TemplateStore) BoxExists(ctx context.Context, service string, stage string, template string) (bool, error) {
-	path := fmt.Sprintf("%s/%s/%s", service, stage, template)
+	//path := fmt.Sprintf("%s/%s/%s", service, stage, template)
+	s3path := path.Join(service, stage, template)
 
 	_, err := b.s3.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(b.config.BucketName),
-		Key:    aws.String(path),
+		Key:    aws.String(s3path),
 	})
 
 	return err == nil, err
 }
 
 func (b *s3TemplateStore) RetrieveBox(ctx context.Context, service string, stage string, template string) ([]byte, error) {
-	path := fmt.Sprintf("%s/%s/%s", service, stage, template)
+	//path := fmt.Sprintf("%s/%s/%s", service, stage, template)
+	s3path := path.Join(service, stage, template)
 	object, err := b.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(b.config.BucketName),
-		Key:    aws.String(path),
+		Key:    aws.String(s3path),
 	})
 
 	if err != nil {
@@ -99,29 +104,37 @@ func (b *s3TemplateStore) UpsertBox(ctx context.Context, box *models.Box) []stri
 
 	for stageName, stage := range box.Stage {
 		name := stage.Template.Name
-		path := fmt.Sprintf("%s/%s/%s", box.Service, stageName, stage.Template.Name)
+		//path := fmt.Sprintf("%s/%s/%s", box.Service, stageName, stage.Template.Name)
+		s3path := path.Join(box.Service, stageName, stage.Template.Name)
 
-		stage.Template.Name = path
+		stage.Template.Name = s3path
 		box.Stage[stageName] = stage
-		_, err := b.store(ctx, path, stage)
-		fmt.Printf("ErrStore. %s", err)
+		_, err := b.store(ctx, s3path, stage)
+
+		if err != nil {
+			b.logger.Error("ErrStoreTemplate", zap.String("path", s3path), zap.Error(err))
+		}
+
 		if err == nil {
 			item, _ = attributevalue.MarshalMap(BoxRecord{
 				Service: box.Service,
 				Stage:   stageName,
 				Template: models.Template{
-					Name:  path,
+					Name:  s3path,
 					Value: name,
 				},
 			})
 			_, err = b.dynamodbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 				TableName: aws.String(b.config.BoxTableName), Item: item,
 			})
-			fmt.Printf("ErrDbStore. %s", err)
+
+			if err != nil {
+				b.logger.Warn("ErrDbStoreTemplate", zap.String("path", s3path), zap.Error(err))
+			}
 		}
 
 		if err == nil {
-			result = append(result, path)
+			result = append(result, s3path)
 		}
 	}
 	return result

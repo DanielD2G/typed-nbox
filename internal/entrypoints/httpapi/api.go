@@ -97,6 +97,8 @@ func NewHttpApi(params Params) {
 	api.HandleFunc("GET /api/entry/prefix", params.Entry.ListByPrefix)
 	api.HandleFunc("DELETE /api/entry/key", params.Entry.DeleteKey)
 
+	api.HandleFunc("GET /api/entry/secret-value", params.Entry.RetrieveSecretValue)
+
 	api.HandleFunc("GET /api/track/key", params.Entry.Tracking)
 
 	api.HandleFunc("GET /api/static/environments", params.Static.Environments)

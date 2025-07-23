@@ -39,6 +39,12 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 
+### retrieve secret value
+GET {{baseUrl}}/api/entry/secret-value?v=/global/example/unique-key7
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
 ### check exist template
 HEAD {{baseUrl}}/api/box/widget-x/development/task_definition.json
 Authorization: Basic {{user}} {{pass}}
@@ -80,21 +86,12 @@ Content-Type: application/json
 
 [
   {
-    "key": "widget-x/development3/debug",
+    "key": "/global/example/debub",
     "value": "False"
   },
   {
-    "key": "widget-x/development3/key",
-    "value": "bla bla 2"
-  },
-  {
-    "key": "widget-x/development3/domain",
-    "value": "test.com",
-    "secure": true
-  },
-  {
-    "key": "widget-x/development3/api-key",
-    "value": "qwertyuiopsdfghjklzxcvbnm",
+    "key": "/global/example/unique-key7",
+    "value": "secret-1234",
     "secure": true
   }
 ]

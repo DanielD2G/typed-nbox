@@ -2,12 +2,14 @@ package aws
 
 import (
 	"context"
-	"log"
+	"errors"
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 	"strings"
 	"sync"
+
+	"go.uber.org/zap"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -15,15 +17,41 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
+var ErrParameterNotFound = errors.New("parameter not found or has no value")
+
 type Result models.Exchange[*ssm.PutParameterOutput, *models.Entry]
 
 type secureParameterStore struct {
 	client *ssm.Client
 	config *application.Config
+	logger *zap.Logger
 }
 
-func NewSecureParameterStore(client *ssm.Client, config *application.Config) domain.SecretAdapter {
-	return &secureParameterStore{client: client, config: config}
+func NewSecureParameterStore(client *ssm.Client, config *application.Config, logger *zap.Logger) domain.SecretAdapter {
+	return &secureParameterStore{client: client, config: config, logger: logger.Named("secure_parameter_store")}
+}
+
+func (s *secureParameterStore) RetrieveSecretValue(ctx context.Context, key string) (*models.Entry, error) {
+	withDecryption := true
+	output, err := s.client.GetParameter(ctx, &ssm.GetParameterInput{
+		Name:           &key,
+		WithDecryption: &withDecryption,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.Parameter == nil {
+		s.logger.Error("ErrParameterNotFound", zap.String("key", key), zap.Error(err))
+		return nil, ErrParameterNotFound
+	}
+
+	return &models.Entry{
+		Key:    key,
+		Value:  *output.Parameter.Value,
+		Secure: true,
+	}, nil
 }
 
 func (s *secureParameterStore) Upsert(ctx context.Context, entries []models.Entry) map[string]error {
@@ -47,7 +75,7 @@ func (s *secureParameterStore) Upsert(ctx context.Context, entries []models.Entr
 
 	for result := range ch {
 		if result.Err != nil {
-			log.Printf("Err upsert secret[%s]. %v. %v \n", result.In.Key, result.Err, result.Out)
+			s.logger.Error("ErrUpsertSecret", zap.Error(result.Err), zap.String("key", result.In.Key), zap.Any("Out", result.Out))
 		}
 		summary[result.In.Key] = result.Err
 	}
@@ -78,7 +106,7 @@ func (s *secureParameterStore) AddTags(ctx context.Context, key *string) {
 		Tags:         []types.Tag{{Key: aws.String("project"), Value: aws.String("nbox")}},
 	})
 	if err != nil {
-		log.Printf("Err add tags [parameter:%s]. %v \n", *key, err)
+		s.logger.Warn("Error adding tags to resource", zap.Error(err), zap.String("key", *key))
 	}
 }
 
@@ -101,11 +129,6 @@ func prepareSecret(entry models.Entry, parameterStoreDefaultTier string, paramet
 	if len(entry.Value) > 4096 {
 		parameterInput.Tier = types.ParameterTierAdvanced
 	}
-
-	// TODO delete this configuration
-	//if parameterStoreDefaultTier != "" {
-	//	parameterInput.Tier = types.ParameterTier(parameterStoreDefaultTier)
-	//}
 
 	if parameterStoreKeyId != "" {
 		parameterInput.KeyId = aws.String(parameterStoreKeyId)

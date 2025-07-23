@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
@@ -26,6 +28,8 @@ const (
 	DynamoDBLockPrefix        = "_"
 	DefaultParallelOperations = 128
 )
+
+var ErrBackendTimeout = errors.New("dynamodb: timeout handling Unprocessed Items")
 
 type BatchResult models.Exchange[map[string][]types.WriteRequest, error]
 
@@ -79,14 +83,16 @@ type dynamodbBackend struct {
 	config      *application.Config
 	permitPool  *PermitPool
 	pathUseCase *usecases.PathUseCase
+	logger      *zap.Logger
 }
 
-func NewDynamodbBackend(dynamodb *dynamodb.Client, config *application.Config, pathUseCase *usecases.PathUseCase) domain.EntryAdapter {
+func NewDynamodbBackend(dynamodb *dynamodb.Client, config *application.Config, pathUseCase *usecases.PathUseCase, logger *zap.Logger) domain.EntryAdapter {
 	return &dynamodbBackend{
 		client:      dynamodb,
 		config:      config,
 		permitPool:  NewPermitPool(0),
 		pathUseCase: pathUseCase,
+		logger:      logger,
 	}
 }
 
@@ -187,7 +193,7 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) ma
 	result2 := <-ch
 
 	if result2.Err != nil {
-		log.Printf("Err save tracking. %v \n", result2)
+		d.logger.Warn("ErrSaveTracking", zap.Error(result2.Err))
 	}
 
 	summary := map[string]error{}
@@ -234,7 +240,7 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, tableName string, 
 				batch = output.UnprocessedItems
 				time.Sleep(duration)
 			} else {
-				err = errors.New("dynamodb: timeout handling Unprocessed Items")
+				err = ErrBackendTimeout // errors.New("dynamodb: timeout handling Unprocessed Items")
 				break
 			}
 
@@ -288,7 +294,7 @@ func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Ent
 	expr, err := expression.NewBuilder().WithKeyCondition(keyEx).Build()
 
 	if err != nil {
-		log.Printf("Err expression Builder %v \n", err)
+		d.logger.Error("ErrExpressionBuilder", zap.Error(err))
 		return nil, err
 	}
 
@@ -304,13 +310,13 @@ func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Ent
 	for queryPaginator.HasMorePages() {
 		response, err = queryPaginator.NextPage(ctx)
 		if err != nil {
-			log.Printf("Err Couldn't query for records released in %v. %v\n", prefix, err)
+			d.logger.Error("ErrQueryPaginator", zap.Error(err), zap.String("prefix", prefix))
 			return nil, err
 		}
 		var records []Record
 		err = attributevalue.UnmarshalListOfMaps(response.Items, &records)
 		if err != nil {
-			log.Printf("Err Couldn't unmarshal query response. %v\n", err)
+			d.logger.Error("ErrUnmarshalListOfMaps", zap.Error(err), zap.String("prefix", prefix))
 			return nil, err
 		}
 
@@ -370,7 +376,7 @@ func (d *dynamodbBackend) Tracking(ctx context.Context, key string) ([]models.Tr
 		Build()
 
 	if err != nil {
-		log.Printf("Err expression Builder %v \n", err)
+		d.logger.Error("ErrExpressionBuilder", zap.Error(err))
 		return nil, err
 	}
 
@@ -387,13 +393,13 @@ func (d *dynamodbBackend) Tracking(ctx context.Context, key string) ([]models.Tr
 	for queryPaginator.HasMorePages() {
 		response, err = queryPaginator.NextPage(ctx)
 		if err != nil {
-			log.Printf("Err Couldn't query for records released in %v. %v\n", key, err)
+			d.logger.Error("ErrQueryPaginator", zap.Error(err), zap.String("key", key))
 			return nil, err
 		}
 		var records []Record
 		err = attributevalue.UnmarshalListOfMaps(response.Items, &records)
 		if err != nil {
-			log.Printf("Err Couldn't unmarshal query response. %v\n", err)
+			d.logger.Error("ErrUnmarshalListOfMaps", zap.Error(err), zap.String("key", key))
 			return nil, err
 		}
 
@@ -421,6 +427,7 @@ func prepareWriteRequest[T any](items map[string]T) []types.WriteRequest {
 	for _, r := range items {
 		item, err = attributevalue.MarshalMap(r)
 		if err != nil {
+			//d.logger.Error("ErrMarshalMap", zap.Error(err))
 			log.Printf("Err could not convert Record to DynamoDB item: %v", err)
 			continue
 		}

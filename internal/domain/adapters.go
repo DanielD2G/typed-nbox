@@ -5,6 +5,11 @@ import (
 	"nbox/internal/domain/models"
 )
 
+//var (
+//	ErrUpsertSecret = errors.New("error al guardar el secreto en Parameter Store")
+//	ErrAddTags      = errors.New("error al añadir etiquetas al recurso de Parameter Store")
+//)
+
 // TemplateAdapter store templates
 type TemplateAdapter interface {
 	UpsertBox(ctx context.Context, box *models.Box) []string
@@ -25,4 +30,5 @@ type EntryAdapter interface {
 // SecretAdapter vars encrypt
 type SecretAdapter interface {
 	Upsert(ctx context.Context, entries []models.Entry) map[string]error
+	RetrieveSecretValue(ctx context.Context, key string) (*models.Entry, error)
 }

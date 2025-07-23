@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 	"nbox/internal/usecases"
@@ -12,13 +13,14 @@ import (
 )
 
 type EntryHandler struct {
-	entryAdapter domain.EntryAdapter
-	entryUseCase *usecases.EntryUseCase
-	render       presenters.Presenters
+	entryAdapter  domain.EntryAdapter
+	entryUseCase  *usecases.EntryUseCase
+	secretAdapter domain.SecretAdapter
+	render        presenters.Presenters
 }
 
-func NewEntryHandler(entryAdapter domain.EntryAdapter, entryUseCase *usecases.EntryUseCase, render presenters.Presenters) *EntryHandler {
-	return &EntryHandler{entryAdapter: entryAdapter, entryUseCase: entryUseCase, render: render}
+func NewEntryHandler(entryAdapter domain.EntryAdapter, secretAdapter domain.SecretAdapter, entryUseCase *usecases.EntryUseCase, render presenters.Presenters) *EntryHandler {
+	return &EntryHandler{entryAdapter: entryAdapter, secretAdapter: secretAdapter, entryUseCase: entryUseCase, render: render}
 }
 
 // Upsert
@@ -145,4 +147,39 @@ func (h *EntryHandler) Tracking(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.render.JSON(w, r, entries)
+}
+
+// RetrieveSecretValue
+// @Summary Retrieve secret value
+// @Description plain value
+// @Tags entry
+// @Produce json
+// @Param v query string true "key path"
+// @Param authorization header string true "Bearer | Basic"
+// @Success 200 {object} models.Entry ""
+// @Failure 401 {object} problem.ProblemDetail "Unauthorized"
+// @Failure 404 {object} problem.ProblemDetail "Not found"
+// @Failure 500 {object} problem.ProblemDetail "Internal error"
+// @Router /api/entry/secret-value [get]
+func (h *EntryHandler) RetrieveSecretValue(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	key := r.URL.Query().Get("v")
+
+	if key == "" {
+		h.render.Error(w, r, errors.New("empty key"), presenters.WithStatus(http.StatusBadRequest))
+		return
+	}
+
+	entry, err := h.secretAdapter.RetrieveSecretValue(ctx, key)
+	if err != nil {
+		h.render.Error(w, r, err, presenters.WithStatus(http.StatusBadRequest))
+		return
+	}
+
+	if entry == nil {
+		h.render.Error(w, r, errors.New("not found key"), presenters.WithStatus(http.StatusNotFound))
+		return
+	}
+
+	h.render.JSON(w, r, entry)
 }

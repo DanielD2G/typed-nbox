@@ -528,6 +528,42 @@ paths:
       summary: Filter by prefix
       tags:
       - entry
+  /api/entry/secret-value:
+    get:
+      description: plain value
+      parameters:
+      - description: key path
+        in: query
+        name: v
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nbox_internal_domain_models.Entry'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Retrieve secret value
+      tags:
+      - entry
   /api/track/key:
     get:
       description: history changes
