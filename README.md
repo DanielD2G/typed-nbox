@@ -347,7 +347,7 @@ flowchart TD
  subgraph subGraph3["Application Layer"]
         UseCases("Use Cases <br> BoxUseCase <br> EntryUseCase")
   end
- subgraph subGraph4["Entrypoints (Puntos de Entrada)"]
+ subgraph subGraph4["Entrypoints"]
         Client(["Cliente HTTP"])
         APIHandlers("HTTP API Handlers <br> BoxHandler <br> EntryHandler")
         Middleware("Auth Middleware <br> OPA, JWT, Basic")
@@ -357,14 +357,14 @@ flowchart TD
     SSMAdapter --> AWS_SSM
     Client -- HTTP Request --> Middleware
     Middleware --> APIHandlers
-    APIHandlers -- Llama a --> UseCases
-    UseCases -- Depende de --> DomainPorts
-    S3Adapter -- Implementa --> DomainPorts
-    DynamoDBAdapter -- Implementa --> DomainPorts
-    SSMAdapter -- Implementa --> DomainPorts
-    InMemoryUserRepo -- Implementa --> DomainPorts
-    UseCases -- Utiliza --> DomainModels
-    DomainPorts -- Utiliza --> DomainModels
+    APIHandlers --> UseCases
+    UseCases -- depends on --> DomainPorts
+    S3Adapter -- impl --> DomainPorts
+    DynamoDBAdapter -- impl --> DomainPorts
+    SSMAdapter -- impl --> DomainPorts
+    InMemoryUserRepo -- impl --> DomainPorts
+    UseCases --> DomainModels
+    DomainPorts  --> DomainModels
     AWS_S3@{ shape: rect}
     AWS_DynamoDB@{ shape: rect}
     AWS_SSM@{ shape: rect}
@@ -385,5 +385,4 @@ flowchart TD
     style subGraph2 stroke:#00C853,fill:#C8E6C9
     style subGraph0 fill:transparent
     style subGraph1 stroke:#FFD600
-
 ```
