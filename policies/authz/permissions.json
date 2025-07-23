@@ -15,6 +15,8 @@
     "entry-key.view_all": ["^GET:/api/entry/key\\?v=(.*)"],
     "entry-key.delete_all": ["^DELETE:/api/entry/key\\?v=(.*)"],
     "entry-prefix.view_development_qa_global": ["^GET:/api/entry/prefix\\?v=(development|qa|global)/(.*)"],
-    "entry-prefix.view_all": ["^GET:/api/entry/prefix\\?v=(.*)"]
+    "entry-prefix.view_all": ["^GET:/api/entry/prefix\\?v=(.*)"],
+
+    "entry-key.retrieve-secret-value":  ["^GET:/api/entry/secret-value\\?v=(.*)"]
   }
 }

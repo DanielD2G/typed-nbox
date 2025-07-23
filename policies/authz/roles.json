@@ -18,6 +18,14 @@
       "entry-key.view_all",
       "entry-prefix.view_all"
     ],
+    "cicd": [
+      "templates.view_all",
+      "templates.view_build",
+      "entry-key.view_all",
+      "entry-prefix.view_all"
+    ],
+    "viewer-secrets": ["entry-key.retrieve-secret-value"],
+    "maintainer": ["entry-key.delete_all"],
     "admin": ["super-admin"]
   }
 }

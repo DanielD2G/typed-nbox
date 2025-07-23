@@ -7,6 +7,7 @@ import (
 	"nbox/internal/domain/models"
 	"nbox/internal/usecases"
 	"net/http"
+	"strings"
 
 	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
 	_ "github.com/norlis/httpgate/pkg/kit/problem"
@@ -168,6 +169,10 @@ func (h *EntryHandler) RetrieveSecretValue(w http.ResponseWriter, r *http.Reques
 	if key == "" {
 		h.render.Error(w, r, errors.New("empty key"), presenters.WithStatus(http.StatusBadRequest))
 		return
+	}
+
+	if !strings.HasPrefix(key, "/") {
+		key = "/" + key
 	}
 
 	entry, err := h.secretAdapter.RetrieveSecretValue(ctx, key)
