@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go.uber.org/zap"
 	"log"
 	"nbox/internal/adapters/aws"
 	"nbox/internal/adapters/persistence"
@@ -15,6 +14,8 @@ import (
 	"nbox/internal/usecases"
 	"nbox/pkg/logger"
 	"os"
+
+	"go.uber.org/zap"
 
 	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
 	status "github.com/norlis/httpgate/pkg/application/health"
@@ -78,7 +79,7 @@ func main() {
 		fx.Provide(presenters.NewPresenters),
 		fx.Provide(httpapi.NewHttpServerMux),
 		fx.Provide(func() domain.UserRepository {
-			credentials := os.Getenv(application.PrefixBasicAuthCredentials)
+			credentials := os.Getenv(application.EnvCredentials)
 			repo, err := persistence.NewInMemoryUserRepository([]byte(credentials))
 			if err != nil {
 				log.Fatal(err)
@@ -86,7 +87,7 @@ func main() {
 			return repo
 		}),
 		fx.Provide(func(config *application.Config, render presenters.Presenters, logger *zap.Logger, repo domain.UserRepository) *auth.Authn {
-			return auth.NewAuthn(application.PrefixBasicAuthCredentials, config, render, logger, repo)
+			return auth.NewAuthn(application.EnvCredentials, config, render, logger, repo)
 		}),
 		fx.Invoke(httpapi.NewHttpApi),
 	)

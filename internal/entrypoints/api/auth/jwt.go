@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"nbox/internal/application"
 	"net/http"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func (a Authn) tryJwt(r *http.Request) (context.Context, error) {

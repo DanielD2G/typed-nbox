@@ -3,9 +3,10 @@ package persistence
 import (
 	"context"
 	"encoding/json"
-	"golang.org/x/crypto/bcrypt"
 	"nbox/internal/domain"
 	"sync"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userSchema map[string]struct {

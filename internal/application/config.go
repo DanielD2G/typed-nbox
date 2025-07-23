@@ -58,7 +58,8 @@ type Config struct {
 //	return config
 //}
 
-const PrefixBasicAuthCredentials = "NBOX_BASIC_AUTH_CREDENTIALS"
+// #nosec G101
+const EnvCredentials = "NBOX_BASIC_AUTH_CREDENTIALS"
 
 func NewConfigFromEnv() *Config {
 	var prefixes []string

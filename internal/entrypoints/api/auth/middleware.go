@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
-	"go.uber.org/zap"
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"net/http"
 	"os"
+
+	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
+	"go.uber.org/zap"
 )
 
 type AuthenticationMiddleware interface{}

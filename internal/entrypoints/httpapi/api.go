@@ -3,12 +3,15 @@ package httpapi
 import (
 	"context"
 	"errors"
-	"github.com/norlis/httpgate/pkg/adapter/opa"
 	"log"
 	"nbox/internal/application"
 	"nbox/internal/entrypoints/api/auth"
 	"nbox/internal/entrypoints/api/handlers"
 	"net/http"
+
+	"github.com/norlis/httpgate/pkg/adapter/opa"
+
+	_ "nbox/docs"
 
 	"github.com/norlis/httpgate/pkg/adapter/apidriven/middleware"
 	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
@@ -16,7 +19,6 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
-	_ "nbox/docs"
 )
 
 type Params struct {

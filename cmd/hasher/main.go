@@ -23,17 +23,17 @@ const (
 	MsgToolDescription   = "       :: Password Hasher ::"
 	MsgInputSeparator    = "...................................."
 	MsgOutputSeparator   = "------------------------------------"
-	MsgPasswordPrompt    = "› Ingresa la contraseña a hashear: "
+	MsgInputPrompt       = "› Ingresa la contraseña a hashear: "
 	MsgSuccess           = "✅ Hash generado con éxito:"
-	ErrEmptyPassword     = "La contraseña no puede estar vacía."
+	ErrEmptyInput        = "La contraseña no puede estar vacía."
 	ErrFmtInvalidCost    = "Error: el costo debe estar entre %d y %d."
-	ErrFmtReadPassword   = "Error al leer la contraseña: %v"
+	ErrFmtReadInput      = "Error al leer la contraseña: %v"
 	ErrFmtHashGeneration = "Error al generar el hash: %v"
 )
 
 func main() {
 
-	fmt.Println(banner)
+	fmt.Print(banner)
 
 	cost := flag.Int("cost", bcrypt.DefaultCost, "Costo de Bcrypt (entre 4 y 31)")
 	flag.Usage = func() {
@@ -53,18 +53,18 @@ func main() {
 	fmt.Println(MsgInputSeparator)
 	fmt.Println()
 
-	fmt.Print(MsgPasswordPrompt)
+	fmt.Print(MsgInputPrompt)
 	fmt.Println()
 
 	passwordBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		log.Fatalf(ErrFmtReadPassword, err)
+		log.Fatalf(ErrFmtReadInput, err)
 	}
 	fmt.Println()
 
 	password := strings.TrimSpace(string(passwordBytes))
 	if password == "" {
-		log.Fatal(ErrEmptyPassword)
+		log.Fatal(ErrEmptyInput)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), *cost)

@@ -3,10 +3,11 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"go.uber.org/zap"
 	"nbox/internal/domain"
 	"net/http"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
 
