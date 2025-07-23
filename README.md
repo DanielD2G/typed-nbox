@@ -330,9 +330,9 @@ config:
 ---
 flowchart TD
  subgraph subGraph0["External Services"]
-        AWS_S3@{ label: "<img src=\"https://icon.icepanel.io/AWS/80/Storage/Simple-Service-S3.png\"> S3" }
-        AWS_DynamoDB@{ label: "<img src=\"https://icon.icepanel.io/AWS/svg/Database/DynamoDB.svg\"> DynamoDB" }
-        AWS_SSM@{ label: "<img src=\"https://icon.icepanel.io/AWS/svg/Management-Governance/Systems-Manager.svg\"> AWS SSM" }
+        AWS_S3["AWS S3"]
+        AWS_DynamoDB["AWS DynamoDB"]
+        AWS_SSM["AWS SSM"]
   end
  subgraph subGraph1["Infrastructure Layer (Adaptadores)"]
         InMemoryUserRepo("InMemoryUserRepo")
@@ -371,7 +371,8 @@ flowchart TD
      AWS_S3:::aws
      AWS_DynamoDB:::aws
      AWS_SSM:::aws
-    classDef aws fill:transparent, stroke:transparent, stroke-width:4px, color:#fff, stroke-dasharray: 5
+    classDef aws fill:#000000, stroke:transparent, stroke-width:4px, color:#fff, stroke-dasharray: 5
+    style AWS_S3 fill:#000000
     style InMemoryUserRepo fill:#FFD600,stroke:#FF6D00,stroke-width:2px,color:none
     style S3Adapter fill:#FFD600,stroke:#FF6D00,stroke-width:2px
     style DynamoDBAdapter fill:#FFD600,stroke:#FF6D00,stroke-width:2px
@@ -384,4 +385,5 @@ flowchart TD
     style subGraph2 stroke:#00C853,fill:#C8E6C9
     style subGraph0 fill:transparent
     style subGraph1 stroke:#FFD600
+
 ```
