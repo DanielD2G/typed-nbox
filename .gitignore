@@ -50,3 +50,5 @@ application.yaml
 certs
 
 .run/
+
+cmd/example

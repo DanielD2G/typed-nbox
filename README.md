@@ -419,9 +419,25 @@ export NBOX_DEFAULT_PREFIX=global
 export NBOX_PARAMETER_STORE_DEFAULT_TIER=Standard
 export NBOX_PARAMETER_STORE_SHORT_ARN=true
 
+# password = pass
+export NBOX_BASIC_AUTH_CREDENTIALS='{"user":{"password": "$2a$10$KHqB91a8nSKF8ppAGt4BHeszuAGK5GGvrrXPR94Pl8FKLEK1hkoYa", "roles": ["admin"],  "status": "active"}}'
+
 go run cmd/nbox/main.go
 
 curl -X GET --location "http://localhost:7337/health" -H "Content-Type: application/json" 
+```
+
+examples credentials
+```json
+{
+   "user": {
+      "password": "$2a$10$KHqB91a8nSKF8ppAGt4BHeszuAGK5GGvrrXPR94Pl8FKLEK1hkoYa",
+      "roles": [
+         "admin"
+      ],
+      "status": "active"
+   }
+}
 ```
 
 
@@ -432,7 +448,7 @@ go install github.com/swaggo/swag/cmd/swag@latest
 go get -u github.com/swaggo/http-swagger
 go get -u github.com/swaggo/swag
 
-./bin/swag init -g internal/entrypoints/api/api.go
+./bin/swag init -g internal/entrypoints/httpapi/api.go
 
 make docs
 ```

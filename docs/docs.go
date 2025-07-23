@@ -40,7 +40,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.TokenRequest"
+                            "$ref": "#/definitions/internal_entrypoints_api_auth.TokenRequest"
                         }
                     }
                 ],
@@ -99,7 +99,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Box"
+                                "$ref": "#/definitions/nbox_internal_domain_models.Box"
                             }
                         }
                     },
@@ -142,7 +142,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CommandBox"
+                            "$ref": "#/definitions/internal_entrypoints_api_handlers.CommandBox"
                         }
                     },
                     {
@@ -463,7 +463,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Entry"
+                                "$ref": "#/definitions/nbox_internal_domain_models.Entry"
                             }
                         }
                     },
@@ -536,7 +536,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Entry"
+                            "$ref": "#/definitions/nbox_internal_domain_models.Entry"
                         }
                     },
                     "401": {
@@ -637,7 +637,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Entry"
+                                "$ref": "#/definitions/nbox_internal_domain_models.Entry"
                             }
                         }
                     },
@@ -688,7 +688,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Tracking"
+                                "$ref": "#/definitions/nbox_internal_domain_models.Tracking"
                             }
                         }
                     },
@@ -706,34 +706,10 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/health": {
-            "get": {
-                "description": "status format json",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json",
-                    "application/json"
-                ],
-                "tags": [
-                    "status"
-                ],
-                "summary": "health",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/health.Health"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
-        "auth.TokenRequest": {
+        "internal_entrypoints_api_auth.TokenRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -744,7 +720,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.CommandBox": {
+        "internal_entrypoints_api_handlers.CommandBox": {
             "type": "object",
             "properties": {
                 "id": {
@@ -752,25 +728,11 @@ const docTemplate = `{
                     "example": "123"
                 },
                 "payload": {
-                    "$ref": "#/definitions/models.Box"
+                    "$ref": "#/definitions/nbox_internal_domain_models.Box"
                 }
             }
         },
-        "health.Health": {
-            "type": "object",
-            "properties": {
-                "hostname": {
-                    "type": "string"
-                },
-                "service": {
-                    "type": "string"
-                },
-                "startedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Box": {
+        "nbox_internal_domain_models.Box": {
             "type": "object",
             "properties": {
                 "service": {
@@ -779,20 +741,17 @@ const docTemplate = `{
                 "stage": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/models.Stage"
+                        "$ref": "#/definitions/nbox_internal_domain_models.Stage"
                     }
                 }
             }
         },
-        "models.Entry": {
+        "nbox_internal_domain_models.Entry": {
             "type": "object",
             "properties": {
                 "key": {
                     "type": "string",
                     "example": "development/service/var-example"
-                },
-                "path": {
-                    "type": "string"
                 },
                 "secure": {
                     "type": "boolean",
@@ -804,15 +763,15 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Stage": {
+        "nbox_internal_domain_models.Stage": {
             "type": "object",
             "properties": {
                 "template": {
-                    "$ref": "#/definitions/models.Template"
+                    "$ref": "#/definitions/nbox_internal_domain_models.Template"
                 }
             }
         },
-        "models.Template": {
+        "nbox_internal_domain_models.Template": {
             "type": "object",
             "properties": {
                 "name": {
@@ -824,7 +783,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Tracking": {
+        "nbox_internal_domain_models.Tracking": {
             "type": "object",
             "properties": {
                 "key": {
@@ -848,35 +807,33 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "detail": {
-                    "type": "string",
-                    "example": "invalid credentials"
+                    "description": "Detail es una explicación legible y específica de esta ocurrencia del problema.",
+                    "type": "string"
                 },
                 "instance": {
-                    "type": "string",
-                    "example": "/api/example"
+                    "description": "Instance es un URI que identifica la ocurrencia específica del problema.",
+                    "type": "string"
                 },
                 "requestId": {
-                    "type": "string",
-                    "example": "123"
+                    "type": "string"
                 },
                 "stackTrace": {
                     "type": "string"
                 },
                 "status": {
-                    "type": "integer",
-                    "example": 401
+                    "description": "Status es el código de estado HTTP reflejado para esta ocurrencia del problema.",
+                    "type": "integer"
                 },
                 "timestamp": {
-                    "type": "string",
-                    "example": "2024-12-11T20:23:55.248212-03:00"
+                    "type": "string"
                 },
                 "title": {
-                    "type": "string",
-                    "example": "Unauthorized"
+                    "description": "Title es un resumen corto y legible del tipo de problema.\nNo debería cambiar entre distintas ocurrencias del mismo problema.",
+                    "type": "string"
                 },
                 "type": {
-                    "type": "string",
-                    "example": "Err"
+                    "description": "Type es un URI que identifica el tipo de problema.\nSe recomienda que provea documentación legible para los desarrolladores.",
+                    "type": "string"
                 }
             }
         }

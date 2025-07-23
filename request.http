@@ -1,3 +1,18 @@
+### token
+POST {{baseUrl}}/api/auth/token
+Content-Type: application/json
+
+
+{
+  "username": "user",
+  "password": "pass"
+}
+
+> {%
+    client.global.set("token", response.body.token);
+%}
+
+
 ### create template
 POST {{baseUrl}}/api/box
 Authorization: Basic {{user}} {{pass}}
@@ -20,7 +35,7 @@ Content-Type: application/json
 
 ### get all boxes
 GET {{baseUrl}}/api/box
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 
@@ -86,19 +101,19 @@ Content-Type: application/json
 
 
 ### Get key
-GET {{baseUrl}}/api/entry/key?v=widget-x/development/domain
+GET {{baseUrl}}/api/entry/key?v=global/example/unique-key7
 Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 
 ### Get prefix
-GET {{baseUrl}}/api/entry/prefix?v=dr/token-api/
+GET {{baseUrl}}/api/entry/prefix?v=global/example/
 Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
 
 
 ### list tracking history
-GET {{baseUrl}}/api/track/key?v=widget-x/development3/domain
+GET {{baseUrl}}/api/track/key?v=global/example/unique-key6
 Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
 

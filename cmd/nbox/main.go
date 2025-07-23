@@ -1,32 +1,59 @@
 package main
 
 import (
-	"context"
 	"flag"
+	"fmt"
+	"go.uber.org/zap"
 	"log"
 	"nbox/internal/adapters/aws"
+	"nbox/internal/adapters/persistence"
 	"nbox/internal/application"
-	"nbox/internal/entrypoints/api"
+	"nbox/internal/domain"
 	"nbox/internal/entrypoints/api/auth"
 	"nbox/internal/entrypoints/api/handlers"
-	"nbox/internal/entrypoints/api/health"
+	"nbox/internal/entrypoints/httpapi"
 	"nbox/internal/usecases"
-	"net"
-	"net/http"
-	"time"
+	"nbox/pkg/logger"
+	"os"
 
+	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
+	status "github.com/norlis/httpgate/pkg/application/health"
 	"go.uber.org/fx"
 )
 
-func main() {
-	var port string
-	var address string
+// banner
+// https://patorjk.com/software/taag/#p=display&f=Doh&t=NBOX
+const banner = `
+                                                                                    
+NNNNNNNN        NNNNNNNNBBBBBBBBBBBBBBBBB        OOOOOOOOO     XXXXXXX       XXXXXXX
+N:::::::N       N::::::NB::::::::::::::::B     OO:::::::::OO   X:::::X       X:::::X
+N::::::::N      N::::::NB::::::BBBBBB:::::B  OO:::::::::::::OO X:::::X       X:::::X
+N:::::::::N     N::::::NBB:::::B     B:::::BO:::::::OOO:::::::OX::::::X     X::::::X
+N::::::::::N    N::::::N  B::::B     B:::::BO::::::O   O::::::OXXX:::::X   X:::::XXX
+N:::::::::::N   N::::::N  B::::B     B:::::BO:::::O     O:::::O   X:::::X X:::::X   
+N:::::::N::::N  N::::::N  B::::BBBBBB:::::B O:::::O     O:::::O    X:::::X:::::X    
+N::::::N N::::N N::::::N  B:::::::::::::BB  O:::::O     O:::::O     X:::::::::X     
+N::::::N  N::::N:::::::N  B::::BBBBBB:::::B O:::::O     O:::::O     X:::::::::X     
+N::::::N   N:::::::::::N  B::::B     B:::::BO:::::O     O:::::O    X:::::X:::::X    
+N::::::N    N::::::::::N  B::::B     B:::::BO:::::O     O:::::O   X:::::X X:::::X   
+N::::::N     N:::::::::N  B::::B     B:::::BO::::::O   O::::::OXXX:::::X   X:::::XXX
+N::::::N      N::::::::NBB:::::BBBBBB::::::BO:::::::OOO:::::::OX::::::X     X::::::X
+N::::::N       N:::::::NB:::::::::::::::::B  OO:::::::::::::OO X:::::X       X:::::X
+N::::::N        N::::::NB::::::::::::::::B     OO:::::::::OO   X:::::X       X:::::X
+NNNNNNNN         NNNNNNNBBBBBBBBBBBBBBBBB        OOOOOOOOO     XXXXXXX       XXXXXXX
+                                                                                    
+`
 
-	flag.StringVar(&port, "port", "7337", "--port=7337")
-	flag.StringVar(&address, "address", "", "--address=0.0.0.0")
+func main() {
+
+	fmt.Print(banner)
+
+	flag.StringVar(&application.Port, "port", "7337", "--port=7337")
+	flag.StringVar(&application.Address, "address", "", "--address=0.0.0.0")
 	flag.Parse()
 
-	fx.New(
+	app := fx.New(
+		fx.Provide(logger.NewLogger),
 		fx.Provide(aws.NewAwsConfig),
 		fx.Provide(aws.NewS3Client),
 		fx.Provide(aws.NewDynamodbClient),
@@ -41,36 +68,33 @@ func main() {
 		fx.Provide(usecases.NewEntryUseCase),
 		fx.Provide(usecases.NewBox),
 		fx.Provide(application.NewConfigFromEnv),
-		fx.Provide(api.NewApi),
-		fx.Provide(health.NewHealthy),
-		fx.Provide(func(config *application.Config) *auth.Authn {
-			return auth.NewAuthn(application.PrefixBasicAuthCredentials, config)
-		}),
-		fx.Invoke(func(api *api.Api, config *application.Config) {
-			done := make(chan error)
-			ctx := context.Background()
-
-			server := &http.Server{
-				Addr:              net.JoinHostPort(address, port),
-				Handler:           api.Engine,
-				ReadHeaderTimeout: 30 * time.Second,
+		fx.Provide(func() *status.Status {
+			version := application.GitHash
+			if version == "" {
+				version = "unknown.dev"
 			}
-
-			go func() {
-				log.Printf("starting server on %s%s\n", address, port)
-				done <- server.ListenAndServe()
-			}()
-
-			select {
-			case err := <-done:
+			return status.NewStatus(version)
+		}),
+		fx.Provide(presenters.NewPresenters),
+		fx.Provide(httpapi.NewHttpServerMux),
+		fx.Provide(func() domain.UserRepository {
+			credentials := os.Getenv(application.PrefixBasicAuthCredentials)
+			repo, err := persistence.NewInMemoryUserRepository([]byte(credentials))
+			if err != nil {
 				log.Fatal(err)
-			case <-ctx.Done():
-				err := server.Shutdown(context.Background())
-				if err != nil {
-					log.Fatal(err)
-				}
 			}
+			return repo
 		}),
+		fx.Provide(func(config *application.Config, render presenters.Presenters, logger *zap.Logger, repo domain.UserRepository) *auth.Authn {
+			return auth.NewAuthn(application.PrefixBasicAuthCredentials, config, render, logger, repo)
+		}),
+		fx.Invoke(httpapi.NewHttpApi),
 	)
+
+	if err := app.Err(); err != nil {
+		log.Panicf("Error en la inicialización de la aplicación FX: %v\n", err)
+	}
+
+	app.Run()
 
 }

@@ -1,8 +1,0 @@
-{
-  "method": "DELETE",
-  "path": "/users",
-  "payload": {
-    "username": "bob",
-    "sub": "alice"
-  }
-}

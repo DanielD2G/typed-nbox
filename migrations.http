@@ -1,20 +1,20 @@
 
 ### globales 1
-POST http://localhost:7337/api/entry
+POST {{baseUrl}}/api/entry
 Authorization: Basic user pass
 Content-Type: application/json
 
 [
-  {"key": "test/norlis-secret/user", "value": "test", "secure": true}
+  {"key": "global/example/user", "value": "test", "secure": true}
 ]
 
 ### globales 2
-POST http://localhost:7337/api/entry
+POST {{baseUrl}}/api/entry
 Authorization: Basic user pass
 Content-Type: application/json
 
 [
-  {"key": "proxy/test-passwd", "value": "xxxxxxxxxxx", "secure": true}
+  {"key": "global/example/test-passwd", "value": "xxxxxxxxxxx", "secure": true}
 ]
 
 

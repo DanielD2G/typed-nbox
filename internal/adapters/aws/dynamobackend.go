@@ -115,10 +115,13 @@ func (d *dynamodbBackend) sanitize(key string) string {
 func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) map[string]error {
 	records := map[string]Record{}
 	tracking := map[string]RecordTracking{}
-	//updatedBy := "test"
+	updatedBy := "ghost"
 	action := "upsert"
 
-	updatedBy := ctx.Value(application.RequestUserName).(string)
+	user, ok := application.UserFromContext(ctx)
+	if ok {
+		updatedBy = user.Name
+	}
 
 	for _, entry := range entries {
 		now := time.Now().UTC()

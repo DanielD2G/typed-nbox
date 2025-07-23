@@ -1,111 +1,159 @@
-include ./Common.mk
 
-GOBUILD=GO111MODULE=on CGO_ENABLED=0 installsuffix=cgo go build -trimpath
+# --- Configuración y Variables ---
+APP_IMPORT_PATH := $(shell go list -m)
+ALL_PKGS := $(sort $(shell go list ./...))
 
-# ALL_MODULES includes ./* dirs (excludes . dir)
-ALL_MODULES := $(shell find . -type f -name "go.mod" -exec dirname {} \; | sort | egrep  '^./' )
+# Variables para inyectar en el build
+GIT_SHA := $(shell git rev-parse --short HEAD)
 
-GOMODULES = $(ALL_MODULES) $(PWD)
-TOOLS_MOD_DIR := $(abspath ./tools/workflow/linters)
+DATE := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+LDFLAGS := -ldflags "-s -w \
+	-X $(APP_IMPORT_PATH)/internal/application.GitHash=$(GIT_SHA) \
+	-X $(APP_IMPORT_PATH)/internal/application.Date=$(DATE)"
+
+# --- Herramientas y Módulos ---
 TOOLS_BIN_DIR := $(abspath ./bin)
+TOOLS_MOD_DIR := $(abspath ./tools)
 
-.PHONY: $(GOMODULES)
-$(GOMODULES):
-	@echo "Running target '$(TARGET)' in module '$@'"
-	TOOL_BIN=$(TOOLS_BIN_DIR) $(MAKE) -C $@ $(TARGET)
+# --- Comandos Base ---
+GOBUILD := GO111MODULE=on CGO_ENABLED=0 go build -trimpath
 
-# Triggers each module's delegation target
-.PHONY: for-all-target
-for-all-target: $(GOMODULES)
+# ====================================================================================
+# Comandos Públicos
+# ====================================================================================
+.PHONY: help all build clean test lint format check-format tools
 
-.PHONY: gofmt
-gofmt:
-	@$(MAKE) for-all-target TARGET="fmt"
+help:
+	@echo "Uso: make [comando]"
+	@echo ""
+	@echo "## --- Ciclo de Vida del Build ---"
+	@echo "  build            Construye los binarios para todas las plataformas."
+	@echo "  amd64-build      Construye el binario para linux/amd64."
+	@echo "  arm64-build      Construye el binario para linux/arm64."
+	@echo "  clean            Elimina la carpeta de build."
+	@echo ""
+	@echo "## --- Calidad de Código ---"
+	@echo "  lint             Ejecuta todos los linters (golangci-lint y staticcheck)."
+	@echo "  format           Formatea automáticamente el código con goimports."
+	@echo "  check-format     Verifica el formato sin modificar archivos (ideal para CI)."
+	@echo "  test             Ejecuta las pruebas unitarias."
+	@echo "  test-sonar       Ejecuta pruebas generando reportes para SonarQube."
+	@echo ""
+	@echo "## --- Gestión de Dependencias ---"
+	@echo "  tools            Instala/actualiza las herramientas de desarrollo en ./bin."
+	@echo "  mod-tidy         Ejecuta 'go mod tidy' en el módulo principal."
+	@echo "  mod-vendor       Ejecuta 'go mod vendor'."
 
-.PHONY: golint
-golint: lint-static-check
-	@$(MAKE) for-all-target TARGET="lint"
 
-.PHONY: gomod-tidy
-gomod-tidy:
-	@$(MAKE) for-all-target TARGET="mod-tidy"
+all: check-format lint test build
 
-.PHONY: docs
-docs:
-	$(TOOLS_BIN_DIR)/swag init -g internal/entrypoints/api/api.go
 
-.PHONY: gomod-vendor
-gomod-vendor:
-	go mod vendor
+## ----------------------------------------
+## Gestión de Herramientas
+## ----------------------------------------
+tools:
+	@echo "==> Instalando herramientas de desarrollo en $(TOOLS_BIN_DIR)..."
+	@# Nos aseguramos de que el directorio de binarios exista
+	@mkdir -p $(TOOLS_BIN_DIR)
+	@# Usamos el go.mod de ./tools para no ensuciar el go.mod principal
+	@cd $(TOOLS_MOD_DIR) && go mod tidy
+	@# Obtenemos la lista de paquetes y la instalamos con un bucle for, que es más robusto
+	@cd $(TOOLS_MOD_DIR) && \
+		for pkg in $$(cat tools.go | grep '_' | awk -F'"' '{print $$2}'); do \
+			echo "Instalando $$pkg..."; \
+			GOBIN=$(TOOLS_BIN_DIR) go install -v $$pkg; \
+		done
+	@echo "==> Herramientas instaladas correctamente."
 
-.PHONY: install-tools
-install-tools:
-	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install golang.org/x/tools/cmd/goimports
-	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install honnef.co/go/tools/cmd/staticcheck
-	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install mvdan.cc/sh/v3/cmd/shfmt
-	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install github.com/swaggo/swag/cmd/swag@latest
 
-.PHONY: install-all-deps
-install-all-deps:
-	go get ./...
+## ----------------------------------------
+## Calidad de Código
+## ----------------------------------------
+lint: tools lint-static-check
+	@echo "==> Ejecutando golangci-lint..."
+	@$(TOOLS_BIN_DIR)/golangci-lint run --timeout 5m --enable gosec
 
-.PHONY: lint-static-check
-lint-static-check:
+lint-static-check: tools
+	@echo "==> Ejecutando staticcheck..."
 	@STATIC_CHECK_OUT=`$(TOOLS_BIN_DIR)/staticcheck $(ALL_PKGS) 2>&1`; \
-		if [ "$$STATIC_CHECK_OUT" ]; then \
-			echo "$(STATIC_CHECK) FAILED => static check errors:\n"; \
-			echo "\033[0;31m$$STATIC_CHECK_OUT\033[0m\n"; \
-			exit 1; \
-		else \
-			echo "\t- \033[0;32mStatic check finished successfully\033[0m"; \
-		fi
+	if [ "$$STATIC_CHECK_OUT" ]; then \
+		echo "ERROR: Falló staticcheck:\n"; \
+		echo "\033[0;31m$$STATIC_CHECK_OUT\033[0m\n"; \
+		exit 1; \
+	else \
+		echo "SUCCESS: Staticcheck finalizado correctamente."; \
+	fi
 
+format: tools
+	@echo "==> Formateando código..."
+	@$(TOOLS_BIN_DIR)/goimports -w .
 
-.PHONY: imports-check
-imports-check:
+check-format: tools
+	@echo "==> Verificando formato del código..."
 	@WARNINGS_CHECK_OUT=`$(TOOLS_BIN_DIR)/goimports -l .`; \
-		if [ "$$WARNINGS_CHECK_OUT" ]; then \
-			echo "Aborting commit due to bad code formatting.\n"; \
-			echo "\033[0;31m$$WARNINGS_CHECK_OUT\033[0m\n"; \
-			echo "You can use \"./bin/goimports -w .\" to automatically fix these issues or run."; \
-			echo "\n\t make gofmt\n" ;\
-			exit 1; \
-		else \
-			echo "\t- \033[0;32mGo imports check finished successfully\033[0m"; \
-		fi
-
-.PHONY: build
-build:
-	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/darwin/amd64/microservice ./cmd/nbox
-	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/amd64/microservice ./cmd/nbox
-	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/microservice ./cmd/nbox
-	GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/windows/amd64/microservice ./cmd/nbox
-
-.PHONY: amd64-build
-amd64-build:
-#	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/amd64/microservice ./cmd/nbox
-	GOOS=linux GOARCH=amd64 $(GOBUILD)  -o ./build/linux/amd64/microservice ./cmd/nbox
+	if [ "$$WARNINGS_CHECK_OUT" ]; then \
+		echo "ERROR: El código no está formateado. Ejecuta 'make format'.\n"; \
+		echo "\033[0;31m$$WARNINGS_CHECK_OUT\033[0m\n"; \
+		exit 1; \
+	else \
+		echo "SUCCESS: El formato del código es correcto."; \
+	fi
 
 
-.PHONY: arm64-build
-arm64-build:
-	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/microservice ./cmd/nbox
-
-.PHONY: clean
-clean:
-	rm -rf ./build
-
-
-# Testing
-.PHONY: test
+## ----------------------------------------
+## Pruebas y SonarQube
+## ----------------------------------------
 test:
-	go test ./... --cover
+	@echo "==> Ejecutando pruebas unitarias..."
+	@go test ./... --cover
 
 test-sonar:
-	go test -covermode=atomic -coverprofile=coverage.out ./...
-	go test -json ./... > report.json
-
+	@echo "==> Generando reportes para SonarQube..."
+	@go test -covermode=atomic -coverprofile=coverage.out ./...
+	@go test -json ./... > report.json
 
 run-local-sonar:
 	docker run -d --name sonarqube -p 9000:9000 sonarqube
+
+
+## ----------------------------------------
+## Build y Clean
+## ----------------------------------------
+build: clean
+	@echo "==> Construyendo binarios..."
+	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/darwin/amd64/microservice ./cmd/microservice
+	GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/darwin/arm64/microservice ./cmd/microservice
+	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/amd64/microservice ./cmd/microservice
+	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/microservice ./cmd/microservice
+	GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/windows/amd64/microservice ./cmd/microservice
+
+amd64-build:
+	GOOS=linux GOARCH=amd64 $(GOBUILD) -o ./build/linux/amd64/microservice ./cmd/microservice
+	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/hasher ./cmd/hasher
+
+arm64-build:
+	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/microservice ./cmd/microservice
+	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/hasher ./cmd/hasher
+
+clean:
+	@echo "==> Limpiando builds anteriores..."
+	@rm -rf ./build
+
+
+## ----------------------------------------
+## Gestión de Módulos
+## ----------------------------------------
+mod-tidy:
+	go mod tidy
+
+mod-vendor:
+	go mod vendor
+
+
+## ----------------------------------------
+## otras
+## ----------------------------------------
+.PHONY: docs
+docs:
+	$(TOOLS_BIN_DIR)/swag init -g internal/entrypoints/httpapi/api.go --parseDependency

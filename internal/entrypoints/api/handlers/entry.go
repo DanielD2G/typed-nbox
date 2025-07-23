@@ -4,18 +4,21 @@ import (
 	"encoding/json"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
-	"nbox/internal/entrypoints/api/response"
 	"nbox/internal/usecases"
 	"net/http"
+
+	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
+	_ "github.com/norlis/httpgate/pkg/kit/problem"
 )
 
 type EntryHandler struct {
 	entryAdapter domain.EntryAdapter
 	entryUseCase *usecases.EntryUseCase
+	render       presenters.Presenters
 }
 
-func NewEntryHandler(entryAdapter domain.EntryAdapter, entryUseCase *usecases.EntryUseCase) *EntryHandler {
-	return &EntryHandler{entryAdapter: entryAdapter, entryUseCase: entryUseCase}
+func NewEntryHandler(entryAdapter domain.EntryAdapter, entryUseCase *usecases.EntryUseCase, render presenters.Presenters) *EntryHandler {
+	return &EntryHandler{entryAdapter: entryAdapter, entryUseCase: entryUseCase, render: render}
 }
 
 // Upsert
@@ -36,7 +39,7 @@ func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 	var entries []models.Entry
 
 	if err := json.NewDecoder(r.Body).Decode(&entries); err != nil {
-		response.Error(w, r, err, http.StatusBadRequest)
+		h.render.Error(w, r, err, presenters.WithStatus(http.StatusBadRequest))
 		return
 	}
 
@@ -46,7 +49,8 @@ func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 	//	response.Error(w, r, err, http.StatusBadRequest)
 	//	return
 	//}
-	response.Success(w, r, h.entryUseCase.Upsert(ctx, entries))
+
+	h.render.JSON(w, r, h.entryUseCase.Upsert(ctx, entries))
 }
 
 // ListByPrefix
@@ -66,11 +70,11 @@ func (h *EntryHandler) ListByPrefix(w http.ResponseWriter, r *http.Request) {
 
 	entries, err := h.entryAdapter.List(ctx, prefix)
 	if err != nil {
-		response.Error(w, r, err, http.StatusBadRequest)
+		h.render.Error(w, r, err, presenters.WithStatus(http.StatusBadRequest))
 		return
 	}
 
-	response.Success(w, r, entries)
+	h.render.JSON(w, r, entries)
 }
 
 // GetByKey
@@ -89,11 +93,11 @@ func (h *EntryHandler) GetByKey(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("v")
 	entry, err := h.entryAdapter.Retrieve(ctx, key)
 	if err != nil {
-		response.Error(w, r, err, http.StatusBadRequest)
+		h.render.Error(w, r, err, presenters.WithStatus(http.StatusBadRequest))
 		return
 	}
 
-	response.Success(w, r, entry)
+	h.render.JSON(w, r, entry)
 }
 
 // DeleteKey
@@ -112,11 +116,11 @@ func (h *EntryHandler) DeleteKey(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("v")
 	err := h.entryAdapter.Delete(ctx, key)
 	if err != nil {
-		response.Error(w, r, err, http.StatusBadRequest)
+		h.render.Error(w, r, err, presenters.WithStatus(http.StatusBadRequest))
 		return
 	}
 
-	response.Success(w, r, map[string]string{"message": "ok"})
+	h.render.JSON(w, r, map[string]string{"message": "ok"})
 }
 
 // Tracking
@@ -136,9 +140,9 @@ func (h *EntryHandler) Tracking(w http.ResponseWriter, r *http.Request) {
 
 	entries, err := h.entryAdapter.Tracking(ctx, key)
 	if err != nil {
-		response.Error(w, r, err, http.StatusBadRequest)
+		h.render.Error(w, r, err, presenters.WithStatus(http.StatusBadRequest))
 		return
 	}
 
-	response.Success(w, r, entries)
+	h.render.JSON(w, r, entries)
 }

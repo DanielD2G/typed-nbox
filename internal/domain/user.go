@@ -1,0 +1,23 @@
+package domain
+
+import (
+	"context"
+	"errors"
+)
+
+var (
+	ErrUserNotFound    = errors.New("user not found")
+	ErrInvalidPassword = errors.New("invalid password") // ✅ Nuevo error específico
+)
+
+type User struct {
+	Username string
+	Password string
+	Roles    []string
+	Status   string
+}
+
+type UserRepository interface {
+	FindByUsername(ctx context.Context, username string) (*User, error)
+	ValidatePassword(ctx context.Context, username string, password string) (*User, error)
+}
