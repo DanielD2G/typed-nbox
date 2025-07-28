@@ -1,4 +1,4 @@
-package aws
+package amazonaws
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
+	"nbox/internal/domain/models/operations"
 	"strings"
 	"sync"
 
@@ -32,10 +33,9 @@ func NewSecureParameterStore(client *ssm.Client, config *application.Config, log
 }
 
 func (s *secureParameterStore) RetrieveSecretValue(ctx context.Context, key string) (*models.Entry, error) {
-	withDecryption := true
 	output, err := s.client.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           &key,
-		WithDecryption: &withDecryption,
+		Name:           aws.String(key),
+		WithDecryption: aws.Bool(true),
 	})
 
 	if err != nil {
@@ -54,49 +54,53 @@ func (s *secureParameterStore) RetrieveSecretValue(ctx context.Context, key stri
 	}, nil
 }
 
-func (s *secureParameterStore) Upsert(ctx context.Context, entries []models.Entry) map[string]error {
-	ch := make(chan Result)
+func (s *secureParameterStore) Upsert(ctx context.Context, entries []models.Entry) operations.Results {
+	ch := make(chan operations.Result)
 	wg := sync.WaitGroup{}
 	wg.Add(len(entries))
 
 	for _, entry := range entries {
-		go func(c chan Result, g *sync.WaitGroup, e models.Entry, x context.Context) {
+		go func(c chan operations.Result, g *sync.WaitGroup, e models.Entry, x context.Context) {
 			defer g.Done()
 			c <- s.Send(x, e)
 		}(ch, &wg, entry, ctx)
 	}
 
-	go func(g *sync.WaitGroup, c chan Result) {
+	go func(g *sync.WaitGroup, c chan operations.Result) {
 		g.Wait()
 		defer close(c)
 	}(&wg, ch)
 
-	summary := make(map[string]error)
+	results := make(operations.Results, len(entries))
 
 	for result := range ch {
-		if result.Err != nil {
-			s.logger.Error("ErrUpsertSecret", zap.Error(result.Err), zap.String("key", result.In.Key), zap.Any("Out", result.Out))
+		if result.Error != nil {
+			s.logger.Error("ErrSecureUpsert",
+				zap.String("key", result.Key),
+				zap.Error(result.Error),
+			)
 		}
-		summary[result.In.Key] = result.Err
+		results[result.Key] = result
 	}
 
-	return summary
+	return results
 }
 
-func (s *secureParameterStore) Send(ctx context.Context, entry models.Entry) Result {
-	in := prepareSecret(entry, s.config.ParameterStoreDefaultTier, s.config.ParameterStoreKeyId)
+func (s *secureParameterStore) Send(ctx context.Context, entry models.Entry) operations.Result {
+	in := prepareSecret(entry, s.config.ParameterStoreKeyId)
 	out, err := s.client.PutParameter(ctx, in)
-	result := Result{Out: out, In: &entry, Err: err}
 
 	if err != nil {
-		return result
+		return operations.Result{Key: entry.Key, Error: err}
 	}
 
+	opType := operations.Updated
 	if out.Version == 1 {
+		opType = operations.Created
 		s.AddTags(ctx, in.Name)
 	}
 
-	return result
+	return operations.Result{Key: entry.Key, Type: opType, Error: nil}
 }
 
 func (s *secureParameterStore) AddTags(ctx context.Context, key *string) {
@@ -106,11 +110,11 @@ func (s *secureParameterStore) AddTags(ctx context.Context, key *string) {
 		Tags:         []types.Tag{{Key: aws.String("project"), Value: aws.String("nbox")}},
 	})
 	if err != nil {
-		s.logger.Warn("Error adding tags to resource", zap.Error(err), zap.String("key", *key))
+		s.logger.Warn("ErrSecureAddingTags", zap.Error(err), zap.String("key", *key))
 	}
 }
 
-func prepareSecret(entry models.Entry, parameterStoreDefaultTier string, parameterStoreKeyId string) *ssm.PutParameterInput {
+func prepareSecret(entry models.Entry, parameterStoreKeyId string) *ssm.PutParameterInput {
 	key := entry.Key
 
 	if !strings.HasPrefix(key, "/") {

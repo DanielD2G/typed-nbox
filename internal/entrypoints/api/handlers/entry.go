@@ -5,7 +5,6 @@ import (
 	"errors"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
-	"nbox/internal/usecases"
 	"net/http"
 	"strings"
 
@@ -15,12 +14,12 @@ import (
 
 type EntryHandler struct {
 	entryAdapter  domain.EntryAdapter
-	entryUseCase  *usecases.EntryUseCase
+	entryUseCase  domain.EntryUseCase
 	secretAdapter domain.SecretAdapter
 	render        presenters.Presenters
 }
 
-func NewEntryHandler(entryAdapter domain.EntryAdapter, secretAdapter domain.SecretAdapter, entryUseCase *usecases.EntryUseCase, render presenters.Presenters) *EntryHandler {
+func NewEntryHandler(entryAdapter domain.EntryAdapter, secretAdapter domain.SecretAdapter, entryUseCase domain.EntryUseCase, render presenters.Presenters) *EntryHandler {
 	return &EntryHandler{entryAdapter: entryAdapter, secretAdapter: secretAdapter, entryUseCase: entryUseCase, render: render}
 }
 
@@ -45,13 +44,6 @@ func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 		h.render.Error(w, r, err, presenters.WithStatus(http.StatusBadRequest))
 		return
 	}
-
-	//results := h.entryUseCase.Upsert(ctx, entries)
-	//err := h.entryAdapter.Upsert(ctx, entries)
-	//if err != nil {
-	//	response.Error(w, r, err, http.StatusBadRequest)
-	//	return
-	//}
 
 	h.render.JSON(w, r, h.entryUseCase.Upsert(ctx, entries))
 }

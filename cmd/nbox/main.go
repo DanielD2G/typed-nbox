@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go.uber.org/fx/fxevent"
 	"log"
-	"nbox/internal/adapters/aws"
+	"nbox/internal/adapters/amazonaws"
 	"nbox/internal/adapters/persistence"
+	"nbox/internal/adapters/sse"
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/entrypoints/api/auth"
@@ -55,19 +57,44 @@ func main() {
 
 	app := fx.New(
 		fx.Provide(logger.NewLogger),
-		fx.Provide(aws.NewAwsConfig),
-		fx.Provide(aws.NewS3Client),
-		fx.Provide(aws.NewDynamodbClient),
-		fx.Provide(aws.NewSsmClient),
-		fx.Provide(aws.NewS3TemplateStore),
-		fx.Provide(aws.NewDynamodbBackend),
-		fx.Provide(aws.NewSecureParameterStore),
+		fx.WithLogger(func(log *zap.Logger) fxevent.Logger {
+			return &fxevent.ZapLogger{Logger: log}
+		}),
+		fx.Provide(amazonaws.NewAwsConfig),
+		fx.Provide(amazonaws.NewS3Client),
+		fx.Provide(amazonaws.NewDynamodbClient),
+		fx.Provide(amazonaws.NewSsmClient),
+
+		// Checkers (health | status | live | ready)
+		fx.Provide(amazonaws.NewS3Checker),
+		fx.Provide(amazonaws.NewDynamoDBChecker),
+		fx.Provide(amazonaws.NewSSMChecker),
+
+		// Adapters
+		fx.Provide(amazonaws.NewS3TemplateStore),
+		fx.Provide(amazonaws.NewDynamodbBackend),
+		fx.Provide(amazonaws.NewSecureParameterStore),
+
+		// Handlers
 		fx.Provide(handlers.NewEntryHandler),
 		fx.Provide(handlers.NewBoxHandler),
 		fx.Provide(handlers.NewStaticHandler),
+		fx.Provide(handlers.NewUIHandler),
+
+
+		// Use case
 		fx.Provide(usecases.NewPathUseCase),
 		fx.Provide(usecases.NewEntryUseCase),
 		fx.Provide(usecases.NewBox),
+
+		fx.Decorate(usecases.NewEntryUseCaseWithEvents),
+		fx.Provide(usecases.NewEventUseCase),
+
+		// sse
+		fx.Provide(sse.NewEventBroker),
+		fx.Provide(sse.NewInMemoryEventPublisher),
+
+		// config
 		fx.Provide(application.NewConfigFromEnv),
 		fx.Provide(func() *status.Status {
 			version := application.GitHash

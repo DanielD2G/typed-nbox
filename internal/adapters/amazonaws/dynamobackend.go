@@ -1,4 +1,4 @@
-package aws
+package amazonaws
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
+	"nbox/internal/domain/models/operations"
 	"nbox/internal/usecases"
 	"strconv"
 	"strings"
@@ -118,9 +119,11 @@ func (d *dynamodbBackend) sanitize(key string) string {
 }
 
 // Upsert is used to insert or update an entry
-func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) map[string]error {
+func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) operations.Results {
 	records := map[string]Record{}
 	tracking := map[string]RecordTracking{}
+	results := make(operations.Results, len(entries))
+
 	updatedBy := "ghost"
 	action := "upsert"
 
@@ -133,6 +136,12 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) ma
 		now := time.Now().UTC()
 
 		entryKey := d.sanitize(entry.Key)
+
+		results[entryKey] = operations.Result{
+			Key:   entryKey,
+			Type:  operations.Updated,
+			Error: nil,
+		}
 
 		path := d.pathUseCase.PathWithoutKey(entryKey)
 		key := d.pathUseCase.BaseKey(entryKey)
@@ -193,17 +202,23 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) ma
 	result2 := <-ch
 
 	if result2.Err != nil {
-		d.logger.Warn("ErrSaveTracking", zap.Error(result2.Err))
+		d.logger.Error("ErrSaveTracking", zap.Error(result2.Err))
 	}
 
-	summary := map[string]error{}
 	for _, req := range result1.Out[d.config.EntryTableName] {
 		key := req.PutRequest.Item["Key"]
 		path := req.PutRequest.Item["Path"]
-		summary[fmt.Sprintf("%s/%s", path, key)] = result1.Err
+
+		k := fmt.Sprintf("%s/%s", path, key)
+
+		results[k] = operations.Result{
+			Key:   k,
+			Type:  operations.Updated,
+			Error: result1.Err,
+		}
 	}
 
-	return summary
+	return results
 }
 
 func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, tableName string, requests []types.WriteRequest) BatchResult {
@@ -240,7 +255,7 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, tableName string, 
 				batch = output.UnprocessedItems
 				time.Sleep(duration)
 			} else {
-				err = ErrBackendTimeout // errors.New("dynamodb: timeout handling Unprocessed Items")
+				err = ErrBackendTimeout
 				break
 			}
 

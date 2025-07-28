@@ -75,7 +75,7 @@ Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 [
-  {"key": "test/qa/var001", "value": "test.com"}
+  {"key": "global/example/var001", "value": "test.com"}
 ]
 
 
@@ -86,11 +86,21 @@ Content-Type: application/json
 
 [
   {
-    "key": "/global/example/debub",
-    "value": "False"
+    "key": "global/example/debug",
+    "value": "active"
   },
   {
-    "key": "/global/example/unique-key7",
+    "key": "global/example/new-secure-1",
+    "value": "ooohh",
+    "secure": true
+  },
+  {
+    "key": "global/example/new-secure-2",
+    "value": "ooohh",
+    "secure": true
+  },
+  {
+    "key": "global/example/unique-key7",
     "value": "secret-1234",
     "secure": true
   }
@@ -98,7 +108,7 @@ Content-Type: application/json
 
 
 ### Get key
-GET {{baseUrl}}/api/entry/key?v=global/example/unique-key7
+GET {{baseUrl}}/api/entry/key?v=global/example/debug
 Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 

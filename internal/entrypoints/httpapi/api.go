@@ -3,7 +3,10 @@ package httpapi
 import (
 	"context"
 	"errors"
+	"github.com/norlis/httpgate/pkg/port"
 	"log"
+	"nbox/internal/adapters/amazonaws"
+	"nbox/internal/adapters/sse"
 	"nbox/internal/application"
 	"nbox/internal/entrypoints/api/auth"
 	"nbox/internal/entrypoints/api/handlers"
@@ -23,14 +26,19 @@ import (
 
 type Params struct {
 	fx.In
-	Router *http.ServeMux
-	Box    *handlers.BoxHandler
-	Entry  *handlers.EntryHandler
-	Static *handlers.StaticHandler
-	Authn  *auth.Authn
-	Status *health.Status
-	Render presenters.Presenters
-	Logger *zap.Logger
+	Router          *http.ServeMux
+	Box             *handlers.BoxHandler
+	Entry           *handlers.EntryHandler
+	Static          *handlers.StaticHandler
+	Authn           *auth.Authn
+	Status          *health.Status
+	Render          presenters.Presenters
+	Logger          *zap.Logger
+	S3Checker       *amazonaws.S3Checker
+	DynamoDBChecker *amazonaws.DynamoDBChecker
+	SSMChecker      *amazonaws.SSMChecker
+	EventBroker     *sse.EventBroker
+	UI              *handlers.UIHandler
 }
 
 // NewHttpApi
@@ -47,7 +55,7 @@ type Params struct {
 // @openapi 3.0.0
 func NewHttpApi(params Params) {
 	base := []middleware.Middleware{
-		middleware.TraceId(middleware.WithHeaderName("TransactionId"), middleware.WithLogger(params.Logger)),
+		middleware.TraceId(middleware.WithHeaderName("x-transaction-id"), middleware.WithLogger(params.Logger)),
 		middleware.APIErrorMiddleware(
 			middleware.WithIntercept(http.StatusNotFound, http.StatusMethodNotAllowed, http.StatusInternalServerError),
 			middleware.WithCustomMessage(http.StatusNotFound, "resource not found"),
@@ -75,13 +83,20 @@ func NewHttpApi(params Params) {
 	params.Router.Handle("GET /status", use(params.Status))
 	params.Router.Handle("GET /health", use(health.NewProbe(nil)))
 	//router.Handle("GET /live", use(health.NewProbe(nil)))
-	//router.Handle("GET /ready", use(health.NewProbe(nil)))
+	params.Router.Handle("GET /ready", use(health.NewProbe(map[string]port.Checker{
+		"s3":       params.S3Checker,
+		"ssm":      params.SSMChecker,
+		"dynamodb": params.DynamoDBChecker,
+	})))
 
 	params.Router.Handle("GET /swagger/", use(httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
 	)))
 
 	params.Router.Handle("POST /api/auth/token", use(params.Authn.TokenHandler()))
+	params.Router.Handle("GET /api/events", params.EventBroker)
+	params.Router.HandleFunc("GET /events", params.UI.EventsPage)
+	params.Router.Handle("GET /assets/", params.UI.ServeAssets())
 
 	api := http.NewServeMux()
 

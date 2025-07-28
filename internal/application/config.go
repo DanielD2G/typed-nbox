@@ -8,18 +8,17 @@ import (
 )
 
 type Config struct {
-	BucketName                string   `pkl:"bucketName"`
-	EntryTableName            string   `pkl:"entryTableName"`
-	TrackingEntryTableName    string   `pkl:"trackingEntryTableName"`
-	BoxTableName              string   `pkl:"boxTableName"`
-	RegionName                string   `pkl:"regionName"`
-	AccountId                 string   `pkl:"accountId"`
-	ParameterStoreDefaultTier string   `pkl:"parameterStoreDefaultTier"`
-	ParameterStoreKeyId       string   `pkl:"parameterStoreKeyId"`
-	ParameterShortArn         bool     `pkl:"parameterShortArn"`
-	DefaultPrefix             string   `pkl:"defaultPrefix"`
-	AllowedPrefixes           []string `pkl:"allowedPrefixes"`
-	HmacSecretKey             []byte
+	BucketName             string   `pkl:"bucketName"`
+	EntryTableName         string   `pkl:"entryTableName"`
+	TrackingEntryTableName string   `pkl:"trackingEntryTableName"`
+	BoxTableName           string   `pkl:"boxTableName"`
+	RegionName             string   `pkl:"regionName"`
+	AccountId              string   `pkl:"accountId"`
+	ParameterStoreKeyId    string   `pkl:"parameterStoreKeyId"`
+	ParameterShortArn      bool     `pkl:"parameterShortArn"`
+	DefaultPrefix          string   `pkl:"defaultPrefix"`
+	AllowedPrefixes        []string `pkl:"allowedPrefixes"`
+	HmacSecretKey          []byte
 }
 
 //func NewConfigFromPkl()  {
@@ -74,18 +73,17 @@ func NewConfigFromEnv() *Config {
 	)
 
 	return &Config{
-		BucketName:                env("NBOX_BUCKET_NAME", "nbox-store"),
-		EntryTableName:            env("NBOX_ENTRIES_TABLE_NAME", "nbox-entry-table"),
-		TrackingEntryTableName:    env("NBOX_TRACKING_ENTRIES_TABLE_NAME", "nbox-tracking-entry-table"),
-		BoxTableName:              env("NBOX_BOX_TABLE_NAME", "nbox-box-table"),
-		AccountId:                 env("ACCOUNT_ID", ""),
-		RegionName:                env("AWS_REGION", "us-east-1"),
-		ParameterStoreDefaultTier: env("NBOX_PARAMETER_STORE_DEFAULT_TIER", "Standard"), // Standard | Advanced
-		ParameterStoreKeyId:       env("NBOX_PARAMETER_STORE_KEY_ID", ""),               // KMS KEY ID
-		ParameterShortArn:         envBool("NBOX_PARAMETER_STORE_SHORT_ARN"),
-		DefaultPrefix:             defaultPrefix,
-		AllowedPrefixes:           prefixes,
-		HmacSecretKey:             []byte(env("HMAC_SECRET_KEY", "2oxgr3!laxu&66(7$3$yzmblz4wpo_0yhlluo-n*ji&3_zr39e-")),
+		BucketName:             env("NBOX_BUCKET_NAME", "nbox-store"),
+		EntryTableName:         env("NBOX_ENTRIES_TABLE_NAME", "nbox-entry-table"),
+		TrackingEntryTableName: env("NBOX_TRACKING_ENTRIES_TABLE_NAME", "nbox-tracking-entry-table"),
+		BoxTableName:           env("NBOX_BOX_TABLE_NAME", "nbox-box-table"),
+		AccountId:              env("ACCOUNT_ID", ""),
+		RegionName:             env("AWS_REGION", "us-east-1"),
+		ParameterStoreKeyId:    env("NBOX_PARAMETER_STORE_KEY_ID", ""), // KMS KEY ID
+		ParameterShortArn:      envBool("NBOX_PARAMETER_STORE_SHORT_ARN"),
+		DefaultPrefix:          defaultPrefix,
+		AllowedPrefixes:        prefixes,
+		HmacSecretKey:          []byte(env("HMAC_SECRET_KEY", "2oxgr3!laxu&66(7$3$yzmblz4wpo_0yhlluo-n*ji&3_zr39e-")),
 	}
 }
 

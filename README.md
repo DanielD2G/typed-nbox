@@ -386,3 +386,8 @@ flowchart TD
     style subGraph0 fill:transparent
     style subGraph1 stroke:#FFD600
 ```
+
+
+## stream events (SSE)
+
+https://htmx.org/extensions/sse/
