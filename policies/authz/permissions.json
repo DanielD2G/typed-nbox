@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "super-admin": ["(GET|POST|PUT|DELETE|HEAD):/.*"],
+    "open": ["GET:/health$", "GET:/test$"],
+
+    "templates.view_all": [ "GET:/api/box$"],
+    "templates.get_development_qa": ["GET:/api/box/(.*)/(qa|development)/[^/]+\\.json$"],
+    "templates.view_exist": ["HEAD:/api/box/(.*)/(.*)/(.*)"],
+    "templates.view_build": ["GET:/api/box/(.*)/(.*)/(.*)/build$"],
+    "templates.view_vars": ["GET:/api/box/(.*)/(.*)/(.*)/vars$"],
+    "templates.upsert_all": ["POST:/api/box$"],
+
+    "entry.upsert": ["POST:/api/entry$"],
+    "entry-key.view_development_qa_global": ["^GET:/api/entry/key\\?v=(development|qa|global)/(.*)"],
+    "entry-key.view_all": ["^GET:/api/entry/key\\?v=(.*)"],
+    "entry-key.delete_all": ["^DELETE:/api/entry/key\\?v=(.*)"],
+    "entry-prefix.view_development_qa_global": ["^GET:/api/entry/prefix\\?v=(development|qa|global)/(.*)"],
+    "entry-prefix.view_all": ["^GET:/api/entry/prefix\\?v=(.*)"],
+
+    "entry-key.retrieve-secret-value":  ["^GET:/api/entry/secret-value\\?v=(.*)"]
+  }
+}

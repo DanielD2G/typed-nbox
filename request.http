@@ -1,3 +1,18 @@
+### token
+POST {{baseUrl}}/api/auth/token
+Content-Type: application/json
+
+
+{
+  "username": "user",
+  "password": "pass"
+}
+
+> {%
+    client.global.set("token", response.body.token);
+%}
+
+
 ### create template
 POST {{baseUrl}}/api/box
 Authorization: Basic {{user}} {{pass}}
@@ -20,7 +35,13 @@ Content-Type: application/json
 
 ### get all boxes
 GET {{baseUrl}}/api/box
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+### retrieve secret value
+GET {{baseUrl}}/api/entry/secret-value?v=/global/example/new-secure-1
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 
@@ -54,7 +75,7 @@ Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 [
-  {"key": "test/qa/var001", "value": "test.com"}
+  {"key": "global/example/var001", "value": "test.com"}
 ]
 
 
@@ -65,40 +86,41 @@ Content-Type: application/json
 
 [
   {
-    "key": "widget-x/development3/debug",
-    "value": "False"
+    "key": "global/example/debug",
+    "value": "active"
   },
   {
-    "key": "widget-x/development3/key",
-    "value": "bla bla 2"
-  },
-  {
-    "key": "widget-x/development3/domain",
-    "value": "test.com",
+    "key": "global/example/new-secure-1",
+    "value": "ooohh",
     "secure": true
   },
   {
-    "key": "widget-x/development3/api-key",
-    "value": "qwertyuiopsdfghjklzxcvbnm",
+    "key": "global/example/new-secure-2",
+    "value": "ooohh",
+    "secure": true
+  },
+  {
+    "key": "global/example/unique-key7",
+    "value": "secret-1234",
     "secure": true
   }
 ]
 
 
 ### Get key
-GET {{baseUrl}}/api/entry/key?v=widget-x/development/domain
+GET {{baseUrl}}/api/entry/key?v=global/example/debug
 Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 
 ### Get prefix
-GET {{baseUrl}}/api/entry/prefix?v=dr/token-api/
+GET {{baseUrl}}/api/entry/prefix?v=global/example/
 Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
 
 
 ### list tracking history
-GET {{baseUrl}}/api/track/key?v=widget-x/development3/domain
+GET {{baseUrl}}/api/track/key?v=global/example/unique-key6
 Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
 

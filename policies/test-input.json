@@ -1,0 +1,5 @@
+{
+  "user": "juan",
+  "roles": ["viewer"],
+  "action": "GET:/api/entry/key?v=development/anticaptcha-api-key/test"
+}

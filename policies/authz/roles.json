@@ -1,0 +1,31 @@
+{
+  "roles": {
+    "anonymous": ["open"],
+    "viewer": [
+      "templates.get_development_qa",
+      "templates.view_exist",
+      "templates.view_all",
+      "entry-key.view_development_qa_global",
+      "entry-prefix.view_development_qa_global"
+    ],
+    "editor": [
+      "templates.view_all",
+      "templates.view_exist",
+      "templates.view_build",
+      "templates.view_vars",
+      "templates.upsert_all",
+      "entry.upsert",
+      "entry-key.view_all",
+      "entry-prefix.view_all"
+    ],
+    "cicd": [
+      "templates.view_all",
+      "templates.view_build",
+      "entry-key.view_all",
+      "entry-prefix.view_all"
+    ],
+    "viewer-secrets": ["entry-key.retrieve-secret-value"],
+    "maintainer": ["entry-key.delete_all"],
+    "admin": ["super-admin"]
+  }
+}

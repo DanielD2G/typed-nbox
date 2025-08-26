@@ -1,44 +1,33 @@
 basePath: /
 definitions:
-  auth.TokenRequest:
+  internal_entrypoints_api_auth.TokenRequest:
     properties:
       password:
         type: string
       username:
         type: string
     type: object
-  handlers.CommandBox:
+  internal_entrypoints_api_handlers.CommandBox:
     properties:
       id:
         example: "123"
         type: string
       payload:
-        $ref: '#/definitions/models.Box'
+        $ref: '#/definitions/nbox_internal_domain_models.Box'
     type: object
-  health.Health:
-    properties:
-      hostname:
-        type: string
-      service:
-        type: string
-      startedAt:
-        type: string
-    type: object
-  models.Box:
+  nbox_internal_domain_models.Box:
     properties:
       service:
         type: string
       stage:
         additionalProperties:
-          $ref: '#/definitions/models.Stage'
+          $ref: '#/definitions/nbox_internal_domain_models.Stage'
         type: object
     type: object
-  models.Entry:
+  nbox_internal_domain_models.Entry:
     properties:
       key:
         example: development/service/var-example
-        type: string
-      path:
         type: string
       secure:
         example: false
@@ -47,12 +36,12 @@ definitions:
         example: value 123
         type: string
     type: object
-  models.Stage:
+  nbox_internal_domain_models.Stage:
     properties:
       template:
-        $ref: '#/definitions/models.Template'
+        $ref: '#/definitions/nbox_internal_domain_models.Template'
     type: object
-  models.Template:
+  nbox_internal_domain_models.Template:
     properties:
       name:
         description: s3 path
@@ -60,7 +49,7 @@ definitions:
       value:
         type: string
     type: object
-  models.Tracking:
+  nbox_internal_domain_models.Tracking:
     properties:
       key:
         type: string
@@ -76,27 +65,32 @@ definitions:
   problem.ProblemDetail:
     properties:
       detail:
-        example: invalid credentials
+        description: Detail es una explicación legible y específica de esta ocurrencia
+          del problema.
         type: string
       instance:
-        example: /api/example
+        description: Instance es un URI que identifica la ocurrencia específica del
+          problema.
         type: string
       requestId:
-        example: "123"
         type: string
       stackTrace:
         type: string
       status:
-        example: 401
+        description: Status es el código de estado HTTP reflejado para esta ocurrencia
+          del problema.
         type: integer
       timestamp:
-        example: "2024-12-11T20:23:55.248212-03:00"
         type: string
       title:
-        example: Unauthorized
+        description: |-
+          Title es un resumen corto y legible del tipo de problema.
+          No debería cambiar entre distintas ocurrencias del mismo problema.
         type: string
       type:
-        example: Err
+        description: |-
+          Type es un URI que identifica el tipo de problema.
+          Se recomienda que provea documentación legible para los desarrolladores.
         type: string
     type: object
 info:
@@ -120,7 +114,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/auth.TokenRequest'
+          $ref: '#/definitions/internal_entrypoints_api_auth.TokenRequest'
       produces:
       - application/json
       responses:
@@ -160,7 +154,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Box'
+              $ref: '#/definitions/nbox_internal_domain_models.Box'
             type: array
         "400":
           description: Bad Request
@@ -187,7 +181,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/handlers.CommandBox'
+          $ref: '#/definitions/internal_entrypoints_api_handlers.CommandBox'
       - description: Bearer | Basic
         in: header
         name: authorization
@@ -403,7 +397,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/models.Entry'
+            $ref: '#/definitions/nbox_internal_domain_models.Entry'
           type: array
       - description: Bearer | Basic
         in: header
@@ -488,7 +482,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Entry'
+            $ref: '#/definitions/nbox_internal_domain_models.Entry'
         "401":
           description: Unauthorized
           schema:
@@ -521,7 +515,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Entry'
+              $ref: '#/definitions/nbox_internal_domain_models.Entry'
             type: array
         "401":
           description: Unauthorized
@@ -532,6 +526,42 @@ paths:
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
       summary: Filter by prefix
+      tags:
+      - entry
+  /api/entry/secret-value:
+    get:
+      description: plain value
+      parameters:
+      - description: key path
+        in: query
+        name: v
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nbox_internal_domain_models.Entry'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Retrieve secret value
       tags:
       - entry
   /api/track/key:
@@ -555,7 +585,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Tracking'
+              $ref: '#/definitions/nbox_internal_domain_models.Tracking'
             type: array
         "401":
           description: Unauthorized
@@ -568,22 +598,6 @@ paths:
       summary: History
       tags:
       - entry
-  /health:
-    get:
-      consumes:
-      - application/json
-      description: status format json
-      produces:
-      - application/json
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/health.Health'
-      summary: health
-      tags:
-      - status
 securityDefinitions:
   BasicAuth:
     type: basic

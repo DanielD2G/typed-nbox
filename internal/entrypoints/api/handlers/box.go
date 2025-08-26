@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
-	"nbox/internal/entrypoints/api/response"
 	"nbox/internal/usecases"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/norlis/httpgate/pkg/adapter/apidriven/presenters"
+	_ "github.com/norlis/httpgate/pkg/kit/problem"
 )
 
 type BoxHandler struct {
 	store      domain.TemplateAdapter
 	boxUseCase *usecases.BoxUseCase
+	render     presenters.Presenters
 }
 
 type CommandBox struct {
@@ -21,8 +22,8 @@ type CommandBox struct {
 	Payload models.Box `json:"payload"`
 }
 
-func NewBoxHandler(store domain.TemplateAdapter, boxUseCase *usecases.BoxUseCase) *BoxHandler {
-	return &BoxHandler{store: store, boxUseCase: boxUseCase}
+func NewBoxHandler(store domain.TemplateAdapter, boxUseCase *usecases.BoxUseCase, render presenters.Presenters) *BoxHandler {
+	return &BoxHandler{store: store, boxUseCase: boxUseCase, render: render}
 }
 
 // UpsertBox
@@ -43,12 +44,12 @@ func (b *BoxHandler) UpsertBox(w http.ResponseWriter, r *http.Request) {
 
 	command := &models.Command[models.Box]{}
 	if err := json.NewDecoder(r.Body).Decode(command); err != nil {
-		response.Error(w, r, err, http.StatusBadRequest)
+		b.render.Error(w, r, err, presenters.WithStatus(http.StatusBadRequest))
 		return
 	}
 
 	result := b.store.UpsertBox(ctx, &command.Payload)
-	response.Success(w, r, result)
+	b.render.JSON(w, r, result)
 }
 
 // Exist
@@ -68,17 +69,17 @@ func (b *BoxHandler) UpsertBox(w http.ResponseWriter, r *http.Request) {
 func (b *BoxHandler) Exist(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	service := chi.URLParam(r, "service")
-	stage := chi.URLParam(r, "stage")
-	template := chi.URLParam(r, "template")
+	service := r.PathValue("service")
+	stage := r.PathValue("stage")
+	template := r.PathValue("template")
 
 	exists, err := b.store.BoxExists(ctx, service, stage, template)
 	if err != nil {
-		response.Error(w, r, err, http.StatusNotFound)
+		b.render.Error(w, r, err, presenters.WithStatus(http.StatusNotFound))
 		return
 	}
 
-	response.Success(w, r, map[string]bool{"exist": exists})
+	b.render.JSON(w, r, map[string]bool{"exist": exists})
 }
 
 // Retrieve
@@ -97,16 +98,17 @@ func (b *BoxHandler) Exist(w http.ResponseWriter, r *http.Request) {
 func (b *BoxHandler) Retrieve(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	service := chi.URLParam(r, "service")
-	stage := chi.URLParam(r, "stage")
-	template := chi.URLParam(r, "template")
+	service := r.PathValue("service")
+	stage := r.PathValue("stage")
+	template := r.PathValue("template")
 
 	data, err := b.store.RetrieveBox(ctx, service, stage, template)
 	if err != nil {
-		response.Error(w, r, err, http.StatusNotFound)
+		b.render.Error(w, r, err, presenters.WithStatus(http.StatusNotFound))
 		return
 	}
 
+	//b.render.PlainText(w, r, data)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = w.Write(data)
 }
@@ -127,9 +129,9 @@ func (b *BoxHandler) Retrieve(w http.ResponseWriter, r *http.Request) {
 func (b *BoxHandler) Build(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	service := chi.URLParam(r, "service")
-	stage := chi.URLParam(r, "stage")
-	template := chi.URLParam(r, "template")
+	service := r.PathValue("service")
+	stage := r.PathValue("stage")
+	template := r.PathValue("template")
 	args := make(map[string]string)
 
 	for key := range r.URL.Query() {
@@ -141,7 +143,7 @@ func (b *BoxHandler) Build(w http.ResponseWriter, r *http.Request) {
 
 	data, err := b.boxUseCase.BuildBox(ctx, service, stage, template, args)
 	if err != nil {
-		response.Error(w, r, err, http.StatusNotFound)
+		b.render.Error(w, r, err, presenters.WithStatus(http.StatusNotFound))
 		return
 	}
 
@@ -165,10 +167,11 @@ func (b *BoxHandler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	data, err := b.store.List(ctx)
 	if err != nil {
-		response.Error(w, r, err, http.StatusNotFound)
+		b.render.Error(w, r, err, presenters.WithStatus(http.StatusNotFound))
 		return
 	}
-	response.Success(w, r, data)
+
+	b.render.JSON(w, r, data)
 }
 
 // ListVars
@@ -186,10 +189,10 @@ func (b *BoxHandler) List(w http.ResponseWriter, r *http.Request) {
 // @Router /api/box/{service}/{stage}/{template}/vars [get]
 func (b *BoxHandler) ListVars(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	service := chi.URLParam(r, "service")
-	stage := chi.URLParam(r, "stage")
-	template := chi.URLParam(r, "template")
+	service := r.PathValue("service")
+	stage := r.PathValue("stage")
+	template := r.PathValue("template")
 
 	data := b.boxUseCase.ListVars(ctx, service, stage, template)
-	response.Success(w, r, data)
+	b.render.JSON(w, r, data)
 }

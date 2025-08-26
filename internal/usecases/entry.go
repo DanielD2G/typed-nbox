@@ -6,6 +6,7 @@ import (
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
+	"nbox/internal/domain/models/operations"
 	"strings"
 )
 
@@ -19,33 +20,29 @@ func NewEntryUseCase(
 	entryAdapter domain.EntryAdapter,
 	secretAdapter domain.SecretAdapter,
 	config *application.Config,
-) *EntryUseCase {
+) domain.EntryUseCase {
 	return &EntryUseCase{entryAdapter: entryAdapter, secretAdapter: secretAdapter, config: config}
 }
 
 // Upsert
 // ARN arn:aws:ssm:<REGION_NAME>:<ACCOUNT_ID>:parameter/<parameter-name>
-func (e *EntryUseCase) Upsert(ctx context.Context, entries []models.Entry) map[string]error {
-
-	result := make(map[string]error)
+func (e *EntryUseCase) Upsert(ctx context.Context, entries []models.Entry) []operations.Result {
 
 	secrets := make([]models.Entry, 0)
 	for _, entry := range entries {
 		if entry.Secure {
 			secrets = append(secrets, entry)
 		}
-		result[entry.Key] = nil
 	}
 
 	secureResults := e.secretAdapter.Upsert(ctx, secrets)
 
 	for i, entry := range entries {
 		if entry.Secure {
-			err := secureResults[entry.Key]
+			err := secureResults[entry.Key].Error
 			entries[i].Value = ""
 
 			if err != nil {
-				result[entry.Key] = err
 				continue
 			}
 
@@ -56,16 +53,16 @@ func (e *EntryUseCase) Upsert(ctx context.Context, entries []models.Entry) map[s
 
 	updated := e.entryAdapter.Upsert(ctx, entries)
 
-	for _, entry := range entries {
-		if !entry.Secure {
-			err := updated[entry.Key]
-			if err != nil {
-				result[entry.Key] = err
-			}
-		}
+	for k, v := range secureResults {
+		updated[k] = v
 	}
 
-	return result
+	var results []operations.Result
+	for _, v := range updated {
+		results = append(results, v)
+	}
+
+	return results
 }
 
 func (e *EntryUseCase) GetParameterArn(key string) string {
