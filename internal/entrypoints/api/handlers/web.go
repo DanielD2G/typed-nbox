@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 	"html/template"
 	"io/fs"
 	"nbox/web"
 	"net/http"
+
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type UIHandler struct {

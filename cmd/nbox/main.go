@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go.uber.org/fx/fxevent"
 	"log"
 	"nbox/internal/adapters/amazonaws"
 	"nbox/internal/adapters/persistence"
@@ -16,6 +15,8 @@ import (
 	"nbox/internal/usecases"
 	"nbox/pkg/logger"
 	"os"
+
+	"go.uber.org/fx/fxevent"
 
 	"go.uber.org/zap"
 
@@ -80,7 +81,6 @@ func main() {
 		fx.Provide(handlers.NewBoxHandler),
 		fx.Provide(handlers.NewStaticHandler),
 		fx.Provide(handlers.NewUIHandler),
-
 
 		// Use case
 		fx.Provide(usecases.NewPathUseCase),

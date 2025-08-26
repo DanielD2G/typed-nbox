@@ -3,7 +3,6 @@ package httpapi
 import (
 	"context"
 	"errors"
-	"github.com/norlis/httpgate/pkg/port"
 	"log"
 	"nbox/internal/adapters/amazonaws"
 	"nbox/internal/adapters/sse"
@@ -11,6 +10,8 @@ import (
 	"nbox/internal/entrypoints/api/auth"
 	"nbox/internal/entrypoints/api/handlers"
 	"net/http"
+
+	"github.com/norlis/httpgate/pkg/port"
 
 	"github.com/norlis/httpgate/pkg/adapter/opa"
 

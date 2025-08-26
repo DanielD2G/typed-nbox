@@ -3,12 +3,13 @@ package usecases
 import (
 	"context"
 	"encoding/json"
-	"github.com/norlis/httpgate/pkg/adapter/apidriven/middleware"
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 	"nbox/internal/domain/models/operations"
 	"time"
+
+	"github.com/norlis/httpgate/pkg/adapter/apidriven/middleware"
 )
 
 type entryUseCaseWithEvents struct {

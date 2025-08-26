@@ -3,10 +3,11 @@ package sse
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	"go.uber.org/fx"
 	"net/http"
 	"sync"
+
+	"github.com/google/uuid"
+	"go.uber.org/fx"
 
 	"go.uber.org/zap"
 )

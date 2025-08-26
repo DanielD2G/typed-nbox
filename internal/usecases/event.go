@@ -3,8 +3,9 @@ package usecases
 import (
 	"context"
 	"encoding/json"
-	"go.uber.org/zap"
 	"nbox/internal/domain"
+
+	"go.uber.org/zap"
 )
 
 type EventUseCase struct {

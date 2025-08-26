@@ -40,7 +40,7 @@ Content-Type: application/json
 
 
 ### retrieve secret value
-GET {{baseUrl}}/api/entry/secret-value?v=/global/example/unique-key7
+GET {{baseUrl}}/api/entry/secret-value?v=/global/example/new-secure-1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
