@@ -15,15 +15,15 @@ ARG USERNAME=app
 ARG USER_UID=4317
 
 RUN addgroup \
-    -g $USER_UID \
-    $USERNAME && \
+    -g ${USER_UID} \
+    ${USERNAME} && \
     adduser \
     -D \
-    -g $USERNAME \
+    -g ${USERNAME} \
     -h "/home/${USERNAME}"\
-    -G $USERNAME \
-    -u $USER_UID \
-    $USERNAME
+    -G ${USERNAME} \
+    -u ${USER_UID} \
+    ${USERNAME}
 
 RUN apk --update add ca-certificates
 
@@ -52,8 +52,8 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     make ${TARGETARCH}-build
 
 # move
-RUN mv /workspace/build/linux/$TARGETARCH/microservice /workspace/microservice
-RUN mv /workspace/build/linux/$TARGETARCH/hasher /workspace/hasher
+RUN mv /workspace/build/linux/${TARGETARCH}/microservice /workspace/microservice
+RUN mv /workspace/build/linux/${TARGETARCH}/hasher /workspace/hasher
 
 
 
@@ -69,8 +69,8 @@ ARG TARGETARCH
 
 # copy artifacts
 # always assume binary is created
-COPY build/linux/$TARGETARCH/microservice /workspace/microservice
-COPY build/linux/$TARGETARCH/hasher /workspace/hasher
+COPY build/linux/${TARGETARCH}/microservice /workspace/microservice
+COPY build/linux/${TARGETARCH}/hasher /workspace/hasher
 
 
 ################################
