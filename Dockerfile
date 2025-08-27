@@ -104,6 +104,7 @@ COPY --from=base /etc/group /etc/group
 COPY --from=base /home/$USERNAME/ /home/$USERNAME
 COPY --from=package /workspace/microservice /microservice
 COPY --from=package /workspace/hasher /bin/hasher
+COPY ./policies /policies
 
 COPY --from=busybox /bin/sh /bin/ls /bin/wget /bin/cat /bin/vi /bin/cp /bin/grep /bin/ln /bin/mkdir /bin/ps /bin/
 
