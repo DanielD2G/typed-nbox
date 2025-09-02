@@ -1,16 +1,16 @@
 {
   "permissions": {
     "super-admin": ["(GET|POST|PUT|DELETE|HEAD):/.*"],
-    "open": ["GET:/health$", "GET:/test$"],
+    "open": ["^GET:/health$", "^GET:/test$"],
 
-    "templates.view_all": [ "GET:/api/box$"],
-    "templates.get_development_qa": ["GET:/api/box/(.*)/(qa|development)/[^/]+\\.json$"],
-    "templates.view_exist": ["HEAD:/api/box/(.*)/(.*)/(.*)"],
-    "templates.view_build": ["GET:/api/box/(.*)/(.*)/(.*)/build$"],
-    "templates.view_vars": ["GET:/api/box/(.*)/(.*)/(.*)/vars$"],
-    "templates.upsert_all": ["POST:/api/box$"],
+    "templates.view_all": [ "^GET:/api/box$", "^GET:/api/box/(.*)/(.*)/(.*)$"],
+    "templates.get_non_production": ["^GET:/api/box/(.*)/(qa|development)/[^/]+\\.json$"],
+    "templates.view_exist": ["^HEAD:/api/box/(.*)/(.*)/(.*)"],
+    "templates.view_build": ["^GET:/api/box/(.*)/(.*)/(.*)/build$"],
+    "templates.view_vars": ["^GET:/api/box/(.*)/(.*)/(.*)/vars$"],
+    "templates.upsert_all": ["^POST:/api/box$"],
 
-    "entry.upsert": ["POST:/api/entry$"],
+    "entry.upsert": ["^POST:/api/entry$"],
     "entry-key.view_development_qa_global": ["^GET:/api/entry/key\\?v=(development|qa|global)/(.*)"],
     "entry-key.view_all": ["^GET:/api/entry/key\\?v=(.*)"],
     "entry-key.delete_all": ["^DELETE:/api/entry/key\\?v=(.*)"],

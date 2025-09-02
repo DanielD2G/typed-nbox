@@ -53,19 +53,19 @@ Content-Type: application/json
 
 ### get template
 GET {{baseUrl}}/api/box/example/development/task_definition.json
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 
 ### vars template
 GET {{baseUrl}}/api/box/example/development/task_definition.json/vars
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 
 ### build template
 GET {{baseUrl}}/api/box/crossborder-api/development/task_definition.json/build
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 

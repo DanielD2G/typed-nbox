@@ -2,7 +2,7 @@
   "roles": {
     "anonymous": ["open"],
     "viewer": [
-      "templates.get_development_qa",
+      "templates.get_non_production",
       "templates.view_exist",
       "templates.view_all",
       "entry-key.view_development_qa_global",
