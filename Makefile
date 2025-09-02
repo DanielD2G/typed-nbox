@@ -122,18 +122,18 @@ run-local-sonar:
 ## ----------------------------------------
 build: clean
 	@echo "==> Construyendo binarios..."
-	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/darwin/amd64/microservice ./cmd/microservice
-	GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/darwin/arm64/microservice ./cmd/microservice
-	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/amd64/microservice ./cmd/microservice
-	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/microservice ./cmd/microservice
-	GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/windows/amd64/microservice ./cmd/microservice
+	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/darwin/amd64/microservice ./cmd/nbox
+	GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/darwin/arm64/microservice ./cmd/nbox
+	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/amd64/microservice ./cmd/nbox
+	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/microservice ./cmd/nbox
+	GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/windows/amd64/microservice ./cmd/nbox
 
 amd64-build:
-	GOOS=linux GOARCH=amd64 $(GOBUILD) -o ./build/linux/amd64/microservice ./cmd/microservice
-	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/hasher ./cmd/hasher
+	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/amd64/microservice ./cmd/nbox
+	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/amd64/hasher ./cmd/hasher
 
 arm64-build:
-	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/microservice ./cmd/microservice
+	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/microservice ./cmd/nbox
 	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./build/linux/arm64/hasher ./cmd/hasher
 
 clean:

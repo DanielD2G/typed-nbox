@@ -15,7 +15,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.60.2
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/golang-jwt/jwt/v5 v5.2.3
-	github.com/norlis/httpgate v0.6.3
+	github.com/google/uuid v1.6.0
+	github.com/norlis/httpgate v0.6.4
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.5
 	go.uber.org/fx v1.24.0
@@ -55,7 +56,6 @@ require (
 	github.com/go-openapi/spec v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.1 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
