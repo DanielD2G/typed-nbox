@@ -40,7 +40,7 @@ Content-Type: application/json
 
 
 ### retrieve secret value
-GET {{baseUrl}}/api/entry/secret-value?v=/global/example/new-secure-1
+GET {{baseUrl}}/api/entry/secret-value?v=/development/crossborder-api/database-url
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -114,9 +114,9 @@ Content-Type: application/json
 
 
 ### Get prefix
-GET {{baseUrl}}/api/entry/prefix?v=global/example/
+GET {{baseUrl}}/api/entry/prefix?v=development/
 Content-Type: application/json
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 
 
 ### list tracking history

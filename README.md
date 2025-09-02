@@ -387,7 +387,17 @@ flowchart TD
     style subGraph1 stroke:#FFD600
 ```
 
+## Security playground
+
+```shell
+
+```
 
 ## stream events (SSE)
 
-https://htmx.org/extensions/sse/
+https://htmx.org/extensions/sse
+
+## TODO
+- [ ] Editar los roles desde una UI
+- [ ] Evitar reiniciar el servicio para recargar los cambios en los roles a los users
+- [ ] En la UI invalidar cache de los secretos despues de actualizar

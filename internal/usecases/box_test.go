@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"nbox/internal/domain/models"
+	"nbox/internal/domain/models/operations"
 	"strings"
 	"testing"
 )
@@ -15,15 +16,15 @@ type mockTemplateAdapter struct {
 type mockEntryAdapter struct {
 }
 
-func (m *mockEntryAdapter) Upsert(ctx context.Context, entries []models.Entry) map[string]error {
+func (m *mockEntryAdapter) Upsert(_ context.Context, _ []models.Entry) operations.Results {
 	return nil
 }
 
-func (m *mockEntryAdapter) Retrieve(ctx context.Context, key string) (*models.Entry, error) {
+func (m *mockEntryAdapter) Retrieve(_ context.Context, _ string) (*models.Entry, error) {
 	return nil, nil
 }
 
-func (m *mockEntryAdapter) List(ctx context.Context, prefix string) ([]models.Entry, error) {
+func (m *mockEntryAdapter) List(_ context.Context, _ string) ([]models.Entry, error) {
 	text := `[
 		{ "path": "widget-x/development", "key": "key", "value": "key-test", "secure": false },
 		{ "path": "widget-x/development", "key": "debug", "value": "false", "secure": false },
@@ -35,11 +36,11 @@ func (m *mockEntryAdapter) List(ctx context.Context, prefix string) ([]models.En
 	return entries, nil
 }
 
-func (m *mockEntryAdapter) Delete(ctx context.Context, key string) error {
+func (m *mockEntryAdapter) Delete(_ context.Context, _ string) error {
 	return nil
 }
 
-func (m *mockEntryAdapter) Tracking(ctx context.Context, key string) ([]models.Tracking, error) {
+func (m *mockEntryAdapter) Tracking(_ context.Context, _ string) ([]models.Tracking, error) {
 	return nil, nil
 }
 
