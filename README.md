@@ -327,64 +327,113 @@ docker buildx build --platform=linux/amd64 --target production -t nbox:1  --prog
 ---
 config:
   layout: dagre
+  theme: base
 ---
 flowchart TD
- subgraph subGraph0["External Services"]
-        AWS_S3["AWS S3"]
-        AWS_DynamoDB["AWS DynamoDB"]
-        AWS_SSM["AWS SSM"]
-  end
- subgraph subGraph1["Infrastructure Layer (Adaptadores)"]
-        InMemoryUserRepo("InMemoryUserRepo")
-        S3Adapter("S3 Template Store")
-        DynamoDBAdapter("DynamoDB Backend")
-        SSMAdapter("Secure Parameter Store")
-  end
- subgraph subGraph2["Domain Layer"]
-        DomainModels("Models <br> Box, Entry, User")
-        DomainPorts("Interfaces / Puertos <br> TemplateAdapter <br> EntryAdapter <br> SecretAdapter <br> UserRepository")
-  end
- subgraph subGraph3["Application Layer"]
-        UseCases("Use Cases <br> BoxUseCase <br> EntryUseCase")
-  end
- subgraph subGraph4["Entrypoints"]
-        Client(["Cliente HTTP"])
-        APIHandlers("HTTP API Handlers <br> BoxHandler <br> EntryHandler")
-        Middleware("Auth Middleware <br> OPA, JWT, Basic")
-  end
-    S3Adapter --> AWS_S3
-    DynamoDBAdapter --> AWS_DynamoDB
-    SSMAdapter --> AWS_SSM
-    Client -- HTTP Request --> Middleware
-    Middleware --> APIHandlers
-    APIHandlers --> UseCases
-    UseCases -- depends on --> DomainPorts
-    S3Adapter -- impl --> DomainPorts
-    DynamoDBAdapter -- impl --> DomainPorts
-    SSMAdapter -- impl --> DomainPorts
-    InMemoryUserRepo -- impl --> DomainPorts
-    UseCases --> DomainModels
-    DomainPorts  --> DomainModels
-    AWS_S3@{ shape: rect}
-    AWS_DynamoDB@{ shape: rect}
-    AWS_SSM@{ shape: rect}
-     AWS_S3:::aws
-     AWS_DynamoDB:::aws
-     AWS_SSM:::aws
-    classDef aws fill:#000000, stroke:transparent, stroke-width:4px, color:#fff, stroke-dasharray: 5
-    style AWS_S3 fill:#000000
-    style InMemoryUserRepo fill:#FFD600,stroke:#FF6D00,stroke-width:2px,color:none
-    style S3Adapter fill:#FFD600,stroke:#FF6D00,stroke-width:2px
-    style DynamoDBAdapter fill:#FFD600,stroke:#FF6D00,stroke-width:2px
-    style SSMAdapter fill:#FFD600,stroke:#FF6D00,stroke-width:2px
-    style DomainModels fill:#228B22,stroke:#333,stroke-width:2px,color:#fff
-    style DomainPorts fill:#2E8B57,stroke:#333,stroke-width:2px,color:#fff
-    style UseCases fill:#BBDEFB,stroke:#2962FF,stroke-width:2px,color:#000000
-    style APIHandlers fill:#D50000,stroke:#333,stroke-width:2px,color:#fff
-    style Middleware fill:#FFCDD2,stroke:#D50000,stroke-width:2px,color:#000000
-    style subGraph2 stroke:#00C853,fill:#C8E6C9
-    style subGraph0 fill:transparent
-    style subGraph1 stroke:#FFD600
+    %% External Services
+    subgraph EXT["☁️ Servicios AWS"]
+        S3[("S3<br/>Templates")]
+        DDB[("DynamoDB<br/>Entries/Tracking")]
+        SSM[("SSM<br/>Secrets")]
+    end
+
+    %% Clients
+    subgraph CLI["🔧 Herramientas"]
+        HASHER["Hasher CLI<br/>Password Gen"]
+        CLIENT["HTTP Client<br/>API Consumer"]
+    end
+
+    %% Presentation Layer
+    subgraph PRES["🌐 Capa de Presentación"]
+        WEBUI["Web UI<br/>Events/Assets"]
+        AUTH["Auth Layer<br/>JWT/Basic/OPA"]
+        API["REST API<br/>Box/Entry/Static"]
+        SSE["SSE Events<br/>Real-time"]
+    end
+
+    %% Application Layer
+    subgraph APP["⚙️ Capa de Aplicación"]
+        BOXUC["BoxUseCase<br/>Template Builder"]
+        ENTRYUC["EntryUseCase<br/>Config Manager"]
+        PATHUC["PathUseCase<br/>Key Utils"]
+        EVENTUC["EventUseCase<br/>Notifications"]
+    end
+
+    %% Domain Layer
+    subgraph DOM["🏛️ Capa de Dominio"]
+        MODELS["Domain Models<br/>Entry | Box | User<br/>Template | Event"]
+        PORTS["Interfaces<br/>EntryAdapter<br/>TemplateAdapter<br/>SecretAdapter"]
+    end
+
+    %% Infrastructure Layer
+    subgraph INFRA["🔌 Adaptadores"]
+        S3ADAPTER["S3 Template Store<br/>JSON Templates"]
+        DDBADAPTER["DynamoDB Backend<br/>Entries/Tracking"]
+        SSMADAPTER["SSM SecureStore<br/>Encrypted Secrets"]
+        MEMORY["InMemory UserRepo<br/>Auth Credentials"]
+        SSEADAPTER["SSE Broker<br/>Event Publisher"]
+    end
+
+    %% Health & Monitoring
+    subgraph HEALTH["📊 Observabilidad"]
+        STATUS["Health Checks<br/>Ready/Live"]
+        LOGS["Structured Logs<br/>Zap Logger"]
+    end
+
+    %% Connections - External
+    CLIENT --> AUTH
+    WEBUI --> SSE
+    
+    %% Connections - Flow
+    AUTH --> API
+    API --> BOXUC
+    API --> ENTRYUC
+    API --> EVENTUC
+    
+    BOXUC --> PATHUC
+    ENTRYUC --> EVENTUC
+    
+    %% Use Cases to Ports
+    BOXUC --> PORTS
+    ENTRYUC --> PORTS
+    EVENTUC --> PORTS
+    
+    %% Ports to Models
+    PORTS --> MODELS
+    
+    %% Adapters to Ports
+    S3ADAPTER -.-> PORTS
+    DDBADAPTER -.-> PORTS
+    SSMADAPTER -.-> PORTS
+    MEMORY -.-> PORTS
+    SSEADAPTER -.-> PORTS
+    
+    %% Infrastructure to External
+    S3ADAPTER --> S3
+    DDBADAPTER --> DDB
+    SSMADAPTER --> SSM
+    
+    %% Health Connections
+    STATUS --> S3ADAPTER
+    STATUS --> DDBADAPTER
+    STATUS --> SSMADAPTER
+
+    %% Styling
+    classDef external fill:#232F3E,stroke:#FF9900,stroke-width:3px,color:#fff
+    classDef cli fill:#2D3748,stroke:#4FD1C7,stroke-width:2px,color:#fff
+    classDef presentation fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
+    classDef application fill:#E8F5E8,stroke:#4CAF50,stroke-width:2px,color:#000
+    classDef domain fill:#FFF3E0,stroke:#FF9800,stroke-width:3px,color:#000
+    classDef infrastructure fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px,color:#000
+    classDef health fill:#FFF5F5,stroke:#E53E3E,stroke-width:2px,color:#000
+
+    class S3,DDB,SSM external
+    class HASHER,CLIENT cli
+    class WEBUI,AUTH,API,SSE presentation
+    class BOXUC,ENTRYUC,PATHUC,EVENTUC application
+    class MODELS,PORTS domain
+    class S3ADAPTER,DDBADAPTER,SSMADAPTER,MEMORY,SSEADAPTER infrastructure
+    class STATUS,LOGS health
 ```
 
 ## Security playground
