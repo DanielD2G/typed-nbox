@@ -93,7 +93,13 @@ func (e *EntryUseCase) Upsert(ctx context.Context, entries []models.Entry) []ope
 		}
 	}
 
-	secureResults := e.secretAdapter.Upsert(ctx, secrets)
+	// Only call secret adapter if there are secrets to process
+	var secureResults operations.Results
+	if len(secrets) > 0 {
+		secureResults = e.secretAdapter.Upsert(ctx, secrets)
+	} else {
+		secureResults = make(operations.Results)
+	}
 
 	for i, entry := range validatedEntries {
 		if entry.Secure {
