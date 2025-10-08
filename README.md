@@ -640,10 +640,3 @@ curl -X POST "http://localhost:7337/api/entry" \
 
 NBOX proporciona la arquitectura base, robusta para la gestión centralizada de configuraciones y secretos con integración AWS. Typed-NBOX extiende esta funcionalidad añadiendo el sistema de validación de tipos para mejorar la confiabilidad de las configuraciones.
 
-
----
-
-## TODO
-- [ ] Editar los roles desde una UI
-- [ ] Evitar reiniciar el servicio para recargar los cambios en los roles a los users
-- [ ] En la UI invalidar cache de los secretos despues de actualizar
