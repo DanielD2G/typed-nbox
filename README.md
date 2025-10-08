@@ -1,12 +1,30 @@
-# NBOX: Gestión Centralizada de Configuraciones y Secretos
+# Typed-NBOX: Gestión Centralizada de Configuraciones y Secretos con Validación de Tipos
 
-NBOX es un servicio backend escrito en Go, diseñado para actuar como una solución centralizada y segura para la administración de variables de entorno, secretos y plantillas de configuración en entornos de desarrollo modernos.
+**Typed-NBOX** es un fork de [NBOX](https://github.com/norlis/nbox) que añade **validación de tipos** para las variables y secretos, mejorando significativamente la confiabilidad de las configuraciones.
+
+## ¿Qué hace diferente a Typed-NBOX?
+
+La característica principal que distingue a Typed-NBOX es el sistema de **Type Validators** que permite:
+
+- ✅ **Validación en tiempo de creación/actualización**: Garantiza que los valores cumplan con el formato esperado antes de ser almacenados
+- 🔒 **Prevención de errores**: Evita que valores inválidos lleguen a producción (URLs malformadas, JSON inválido, números incorrectos, etc.)
+- 🛡️ **Inmutabilidad de tipos**: Una vez asignado un validador a una variable, no puede cambiarse sin eliminarla primero
+- 🎯 **Validadores integrados**: Incluye validadores predefinidos para tipos comunes (number, json, url-https, url-http)
+- 🔧 **Validadores personalizados**: Crea tus propios validadores basados en expresiones regulares
+
+### Validadores Integrados
+
+- `number`: Valida que el valor sea un número entero o decimal
+- `json`: Valida que el valor sea JSON válido
+- `url-https`: Valida URLs HTTPS válidas
+- `url-http`: Valida URLs HTTP válidas
 
 ---
 
 ## Características Principales
 
 -   **Almacén Centralizado**: Gestiona variables y secretos para múltiples servicios y entornos (desarrollo, QA, producción) desde un único lugar.
+-   **🆕 Validación de Tipos**: Sistema de validadores que garantiza la integridad y formato correcto de las variables antes de almacenarlas.
 -   **Integración Nativa con AWS**:
   -   **Variables**: Almacenadas en **AWS DynamoDB**, con historial de cambios para auditoría.
   -   **Secretos**: Guardados de forma segura en **AWS Parameter Store** utilizando una clave de cifrado propia de **AWS KMS**.
@@ -41,6 +59,7 @@ NBOX es un servicio backend escrito en Go, diseñado para actuar como una soluci
     export NBOX_ENTRIES_TABLE_NAME=nbox-entries-development
     export NBOX_BOX_TABLE_NAME=nbox-box-development
     export NBOX_BUCKET_NAME=tu-bucket-nbox-development
+    export NBOX_TYPE_VALIDATOR_TABLE_NAME=nbox-type-validator-development
     export NBOX_BASIC_AUTH_CREDENTIALS='{"user":{"password": "$2a$10$...", "roles": ["admin"], "status": "active"}}'
     ```
     > **Nota**: Para generar el hash de la contraseña, puedes usar la herramienta `hasher` incluida en `cmd/hasher`.
@@ -90,6 +109,35 @@ curl -X POST -v "http://localhost:7337/api/entry" \
     --user "user:pass"
 ```
 
+**Con validación de tipo:**
+
+```shell
+PAYLOAD='[
+   {
+     "key": "global/example/api_url",
+     "value": "https://api.example.com",
+     "type_validator_name": "url-https"
+   },
+   {
+     "key": "global/example/max_retries",
+     "value": "5",
+     "type_validator_name": "number"
+   },
+   {
+     "key": "global/example/config",
+     "value": "{\"timeout\": 30, \"debug\": false}",
+     "type_validator_name": "json"
+   }
+]'
+
+curl -X POST -v "http://localhost:7337/api/entry" \
+    -H "Content-Type: application/json" \
+    -d "${PAYLOAD}" \
+    --user "user:pass"
+```
+
+> **Nota**: Una vez que una variable tiene asignado un `type_validator_name`, no puede cambiarse. Debes eliminar la variable y crearla nuevamente si necesitas cambiar su tipo.
+
 #### `GET /api/entry/prefix?v=<path>`
 Lista todas las variables bajo un prefijo (ej: `stage/service`)
 
@@ -113,6 +161,52 @@ Obtiene el valor de un secreto específico.
 curl -X GET "http://localhost:7337/api/entry/secret-value?v=global/example/email_password" \
     --user "user:pass" | jq
 ```
+
+### 🆕 Gestión de Type Validators
+
+Los Type Validators permiten definir reglas de validación para las variables, garantizando que los valores cumplan con el formato esperado.
+
+#### `POST /api/type-validator`
+Crea o actualiza un validador de tipo personalizado.
+
+```shell
+PAYLOAD='{
+  "name": "ipv4",
+  "regex": "^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$",
+  "description": "Validates IPv4 addresses"
+}'
+
+curl -X POST "http://localhost:7337/api/type-validator" \
+    -H "Content-Type: application/json" \
+    -d "${PAYLOAD}" \
+    --user "user:pass" | jq
+```
+
+#### `GET /api/type-validator`
+Lista todos los validadores de tipo disponibles (integrados y personalizados).
+
+```shell
+curl -X GET "http://localhost:7337/api/type-validator" \
+    --user "user:pass" | jq
+```
+
+#### `GET /api/type-validator/name?v=<validator-name>`
+Obtiene los detalles de un validador específico.
+
+```shell
+curl -X GET "http://localhost:7337/api/type-validator/name?v=ipv4" \
+    --user "user:pass" | jq
+```
+
+#### `DELETE /api/type-validator/name?v=<validator-name>`
+Elimina un validador de tipo personalizado.
+
+```shell
+curl -X DELETE "http://localhost:7337/api/type-validator/name?v=ipv4" \
+    --user "user:pass"
+```
+
+> **Nota**: Los validadores integrados (`number`, `json`, `url-https`, `boolean`, `email`) no pueden ser eliminados.
 
 ### Gestión de Plantillas (Templates)
 
@@ -225,18 +319,19 @@ curl "http://localhost:7337/api/box/example/development/task_definition.json/bui
 ### Configuración
 El servicio se configura mediante variables de entorno:
 
-| Variable                                 | Descripción                                                                 | Valor por Defecto             |
-|------------------------------------------|------------------------------------------------------------------------------|-------------------------------|
-| `NBOX_ALLOWED_PREFIXES`                  | Lista de prefijos de entorno permitidos, separados por comas.               | `development/,qa/,beta/,...` |
-| `NBOX_DEFAULT_PREFIX`                    | Prefijo por defecto si no se especifica uno (`global/`).                    | `global`                      |
-| `NBOX_BASIC_AUTH_CREDENTIALS`            | JSON con las credenciales de usuario para la autenticación básica.          | `-`                           |
-| `NBOX_BOX_TABLE_NAME`                    | Nombre de la tabla DynamoDB para la metadata de las plantillas.             | `nbox-box-table`             |
-| `NBOX_BUCKET_NAME`                       | Nombre del bucket S3 para almacenar las plantillas.                         | `nbox-store`                 |
-| `NBOX_ENTRIES_TABLE_NAME`               | Nombre de la tabla DynamoDB para las variables.                             | `nbox-entry-table`           |
-| `NBOX_TRACKING_ENTRIES_TABLE_NAME`       | Nombre de la tabla DynamoDB para el historial de cambios.                   | `nbox-tracking-entry-table`  |
-| `NBOX_PARAMETER_STORE_KEY_ID`            | ID de la clave KMS para cifrar los secretos en Parameter Store.             | `-`                           |
-| `NBOX_PARAMETER_STORE_SHORT_ARN`         | `true` para almacenar el nombre del parámetro, `false` para el ARN completo.| `false`                       |
-| `HMAC_SECRET_KEY`                        | Clave secreta para firmar los tokens JWT.                                   | `Una clave predeterminada`   |
+| Variable                            | Descripción                                                                  | Valor por Defecto            |
+|-------------------------------------|------------------------------------------------------------------------------|------------------------------|
+| `NBOX_ALLOWED_PREFIXES`             | Lista de prefijos de entorno permitidos, separados por comas.                | `development/,qa/,beta/,...` |
+| `NBOX_DEFAULT_PREFIX`               | Prefijo por defecto si no se especifica uno (`global/`).                     | `global`                     |
+| `NBOX_BASIC_AUTH_CREDENTIALS`       | JSON con las credenciales de usuario para la autenticación básica.           | `-`                          |
+| `NBOX_BOX_TABLE_NAME`               | Nombre de la tabla DynamoDB para la metadata de las plantillas.              | `nbox-box-table`             |
+| `NBOX_BUCKET_NAME`                  | Nombre del bucket S3 para almacenar las plantillas.                          | `nbox-store`                 |
+| `NBOX_ENTRIES_TABLE_NAME`           | Nombre de la tabla DynamoDB para las variables.                              | `nbox-entry-table`           |
+| `NBOX_TRACKING_ENTRIES_TABLE_NAME`  | Nombre de la tabla DynamoDB para el historial de cambios.                    | `nbox-tracking-entry-table`  |
+| `NBOX_TYPE_VALIDATOR_TABLE_NAME` 🆕 | Nombre de la tabla DynamoDB para los validadores de tipo personalizados.     | `nbox-type-validator-table`  |
+| `NBOX_PARAMETER_STORE_KEY_ID`       | ID de la clave KMS para cifrar los secretos en Parameter Store.              | `-`                          |
+| `NBOX_PARAMETER_STORE_SHORT_ARN`    | `true` para almacenar el nombre del parámetro, `false` para el ARN completo. | `false`                      |
+| `HMAC_SECRET_KEY`                   | Clave secreta para firmar los tokens JWT.                                    | `Una clave predeterminada`   |
 
 
 ### Desarrollo
@@ -445,6 +540,108 @@ flowchart TD
 ## stream events (SSE)
 
 https://htmx.org/extensions/sse
+
+---
+
+## 🎯 Casos de Uso de Type Validators
+
+### Ejemplo 1: Configuración de una API con validación
+
+```shell
+# 1. Crear validador personalizado para API keys
+curl -X POST "http://localhost:7337/api/type-validator" \
+    -H "Content-Type: application/json" \
+    -d '{"name": "api-key", "regex": "^[A-Za-z0-9]{32,64}$", "description": "API Key format"}' \
+    --user "user:pass"
+
+# 2. Crear variables con validación
+curl -X POST "http://localhost:7337/api/entry" \
+    -H "Content-Type: application/json" \
+    -d '[
+      {
+        "key": "production/api/base_url",
+        "value": "https://api.example.com",
+        "type_validator_name": "url-https"
+      },
+      {
+        "key": "production/api/api_key",
+        "value": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+        "secure": true,
+        "type_validator_name": "api-key"
+      },
+      {
+        "key": "production/api/timeout",
+        "value": "30",
+        "type_validator_name": "number"
+      }
+    ]' \
+    --user "user:pass"
+```
+
+### Ejemplo 2: Prevención de errores en configuración
+
+```shell
+# Esto FALLARÁ porque la URL no es HTTPS
+curl -X POST "http://localhost:7337/api/entry" \
+    -H "Content-Type: application/json" \
+    -d '[{"key": "production/api/url", "value": "http://insecure.com", "type_validator_name": "url-https"}]' \
+    --user "user:pass"
+
+# Error: validation failed for key 'production/api/url': value does not match pattern for url-https
+
+# Esto PASARÁ
+curl -X POST "http://localhost:7337/api/entry" \
+    -H "Content-Type: application/json" \
+    -d '[{"key": "production/api/url", "value": "https://secure.com", "type_validator_name": "url-https"}]' \
+    --user "user:pass"
+```
+
+### Ejemplo 3: Validación de configuración JSON compleja
+
+```shell
+# Crear una configuración compleja como JSON
+PAYLOAD='[{
+  "key": "production/service/config",
+  "value": "{\"database\": {\"host\": \"localhost\", \"port\": 5432}, \"cache\": {\"ttl\": 3600}}",
+  "type_validator_name": "json"
+}]'
+
+curl -X POST "http://localhost:7337/api/entry" \
+    -H "Content-Type: application/json" \
+    -d "${PAYLOAD}" \
+    --user "user:pass"
+
+# Intentar actualizar con JSON inválido FALLARÁ
+INVALID_JSON='[{
+  "key": "production/service/config",
+  "value": "{invalid json}",
+  "type_validator_name": "json"
+}]'
+
+curl -X POST "http://localhost:7337/api/entry" \
+    -H "Content-Type: application/json" \
+    -d "${INVALID_JSON}" \
+    --user "user:pass"
+# Error: validation failed
+```
+
+### Beneficios en Producción
+
+✅ **Detecta errores antes de deployment**: Evita que configuraciones incorrectas lleguen a producción
+✅ **Documentación implícita**: El tipo del validador documenta qué formato se espera
+✅ **Consistencia**: Garantiza que todos los entornos usen el mismo formato
+✅ **Seguridad**: Previene inyección de valores maliciosos con formatos incorrectos
+
+---
+
+## 🙏 Créditos
+
+**Typed-NBOX** está basado en [NBOX](https://github.com/norlis/nbox)
+
+NBOX proporciona la arquitectura base, robusta para la gestión centralizada de configuraciones y secretos con integración AWS. Typed-NBOX extiende esta funcionalidad añadiendo el sistema de validación de tipos para mejorar la confiabilidad de las configuraciones.
+
+
+---
 
 ## TODO
 - [ ] Editar los roles desde una UI

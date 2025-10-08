@@ -23,6 +23,7 @@ go.work
 
 build/
 bin/
+hasher
 
 .DS_Store
 
