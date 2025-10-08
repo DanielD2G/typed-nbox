@@ -58,11 +58,11 @@ var (
 
 	// Map of built-in validators
 	BuiltInValidators = map[string]TypeValidator{
-		"string":     TypeValidatorString,
-		"number":     TypeValidatorNumber,
-		"json":       TypeValidatorJSON,
-		"url-https":  TypeValidatorURLHTTPS,
-		"url-http":   TypeValidatorURLHTTP,
+		"string":    TypeValidatorString,
+		"number":    TypeValidatorNumber,
+		"json":      TypeValidatorJSON,
+		"url-https": TypeValidatorURLHTTPS,
+		"url-http":  TypeValidatorURLHTTP,
 	}
 )
 

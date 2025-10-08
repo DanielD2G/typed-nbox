@@ -45,8 +45,8 @@ func (e *EntryUseCase) Upsert(ctx context.Context, entries []models.Entry) []ope
 			// Entry exists, check if type validator is being changed
 			if existingEntry.TypeValidatorName != entry.TypeValidatorName {
 				results = append(results, operations.Result{
-					Key:   entry.Key,
-					Type:  operations.Error,
+					Key:  entry.Key,
+					Type: operations.Error,
 					Error: fmt.Errorf("cannot change type validator for existing key '%s' from '%s' to '%s'. Delete and recreate the entry to change type",
 						entry.Key, existingEntry.TypeValidatorName, entry.TypeValidatorName),
 				})
