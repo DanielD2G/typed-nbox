@@ -32,6 +32,9 @@ definitions:
       secure:
         example: false
         type: boolean
+      type_validator_name:
+        example: json
+        type: string
       value:
         example: value 123
         type: string
@@ -60,6 +63,15 @@ definitions:
       updatedBy:
         type: string
       value:
+        type: string
+    type: object
+  nbox_internal_domain_models.TypeValidator:
+    properties:
+      name:
+        example: email
+        type: string
+      regex:
+        example: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
         type: string
     type: object
   problem.ProblemDetail:
@@ -598,6 +610,149 @@ paths:
       summary: History
       tags:
       - entry
+  /api/type-validator:
+    get:
+      description: List all type validators (built-in + custom)
+      parameters:
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nbox_internal_domain_models.TypeValidator'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: List all type validators
+      tags:
+      - type_validator
+    post:
+      consumes:
+      - application/json
+      description: Create or update a custom type validator
+      parameters:
+      - description: Type Validator
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/nbox_internal_domain_models.TypeValidator'
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Create or update type validator
+      tags:
+      - type_validator
+  /api/type-validator/name:
+    delete:
+      description: Delete a custom type validator
+      parameters:
+      - description: validator name
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Delete type validator
+      tags:
+      - type_validator
+    get:
+      description: Get details of a specific type validator
+      parameters:
+      - description: validator name
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nbox_internal_domain_models.TypeValidator'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Retrieve type validator by name
+      tags:
+      - type_validator
 securityDefinitions:
   BasicAuth:
     type: basic

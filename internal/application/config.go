@@ -11,6 +11,7 @@ type Config struct {
 	BucketName             string   `pkl:"bucketName"`
 	EntryTableName         string   `pkl:"entryTableName"`
 	TrackingEntryTableName string   `pkl:"trackingEntryTableName"`
+	TypeValidatorTableName string   `pkl:"typeValidatorTableName"`
 	BoxTableName           string   `pkl:"boxTableName"`
 	RegionName             string   `pkl:"regionName"`
 	AccountId              string   `pkl:"accountId"`
@@ -76,6 +77,7 @@ func NewConfigFromEnv() *Config {
 		BucketName:             env("NBOX_BUCKET_NAME", "nbox-store"),
 		EntryTableName:         env("NBOX_ENTRIES_TABLE_NAME", "nbox-entry-table"),
 		TrackingEntryTableName: env("NBOX_TRACKING_ENTRIES_TABLE_NAME", "nbox-tracking-entry-table"),
+		TypeValidatorTableName: env("NBOX_TYPE_VALIDATOR_TABLE_NAME", "nbox-type-validator-table"),
 		BoxTableName:           env("NBOX_BOX_TABLE_NAME", "nbox-box-table"),
 		AccountId:              env("ACCOUNT_ID", ""),
 		RegionName:             env("AWS_REGION", "us-east-1"),

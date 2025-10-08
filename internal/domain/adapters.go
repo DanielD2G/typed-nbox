@@ -53,3 +53,11 @@ type WebhookRepository interface {
 type EventPublisher interface {
 	Publish(ctx context.Context, event Event[json.RawMessage]) error
 }
+
+// TypeValidatorAdapter manages type validators
+type TypeValidatorAdapter interface {
+	Upsert(ctx context.Context, validator models.TypeValidator) error
+	Retrieve(ctx context.Context, name string) (*models.TypeValidator, error)
+	List(ctx context.Context) ([]models.TypeValidator, error)
+	Delete(ctx context.Context, name string) error
+}

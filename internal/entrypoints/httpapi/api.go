@@ -30,6 +30,7 @@ type Params struct {
 	Router          *http.ServeMux
 	Box             *handlers.BoxHandler
 	Entry           *handlers.EntryHandler
+	TypeValidator   *handlers.TypeValidatorHandler
 	Static          *handlers.StaticHandler
 	Authn           *auth.Authn
 	Status          *health.Status
@@ -116,6 +117,11 @@ func NewHttpApi(params Params) {
 	api.HandleFunc("GET /api/entry/secret-value", params.Entry.RetrieveSecretValue)
 
 	api.HandleFunc("GET /api/track/key", params.Entry.Tracking)
+
+	api.HandleFunc("POST /api/type-validator", params.TypeValidator.Upsert)
+	api.HandleFunc("GET /api/type-validator", params.TypeValidator.List)
+	api.HandleFunc("GET /api/type-validator/name", params.TypeValidator.GetByName)
+	api.HandleFunc("DELETE /api/type-validator/name", params.TypeValidator.Delete)
 
 	api.HandleFunc("GET /api/static/environments", params.Static.Environments)
 

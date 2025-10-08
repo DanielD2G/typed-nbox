@@ -34,6 +34,7 @@ func NewEntryHandler(entryAdapter domain.EntryAdapter, secretAdapter domain.Secr
 // @Success 200 {object} map[string]string ""
 // @Failure 400 {object} problem.ProblemDetail "Bad Request"
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
+// @Failure 422 {object} []operations.Result "Validation errors"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"
 // @Router /api/entry [post]
 func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +46,24 @@ func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.render.JSON(w, r, h.entryUseCase.Upsert(ctx, entries))
+	results := h.entryUseCase.Upsert(ctx, entries)
+
+	// Check if there are any validation errors
+	hasErrors := false
+	for _, result := range results {
+		if result.Error != nil {
+			hasErrors = true
+			break
+		}
+	}
+
+	if hasErrors {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		h.render.JSON(w, r, results)
+		return
+	}
+
+	h.render.JSON(w, r, results)
 }
 
 // ListByPrefix

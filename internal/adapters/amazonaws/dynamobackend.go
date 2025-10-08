@@ -147,9 +147,10 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) op
 		key := d.pathUseCase.BaseKey(entryKey)
 
 		metadata := models.Metadata{
-			UpdatedAt: now,
-			UpdatedBy: updatedBy,
-			Secure:    entry.Secure,
+			UpdatedAt:         now,
+			UpdatedBy:         updatedBy,
+			Secure:            entry.Secure,
+			TypeValidatorName: entry.TypeValidatorName,
 		}
 
 		records[fmt.Sprintf("%s/%s", path, key)] = Record{
@@ -292,9 +293,10 @@ func (d *dynamodbBackend) Retrieve(ctx context.Context, key string) (*models.Ent
 	}
 
 	return &models.Entry{
-		Key:    d.pathUseCase.Concat(record.Path, record.Key), // vaultKey(record),
-		Value:  string(record.Value),
-		Secure: record.Metadata.Secure,
+		Key:               d.pathUseCase.Concat(record.Path, record.Key), // vaultKey(record),
+		Value:             string(record.Value),
+		Secure:            record.Metadata.Secure,
+		TypeValidatorName: record.Metadata.TypeValidatorName,
 	}, nil
 }
 
@@ -338,10 +340,11 @@ func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Ent
 		for _, record := range records {
 			if !strings.HasPrefix(record.Key, DynamoDBLockPrefix) {
 				entries = append(entries, models.Entry{
-					Key:    record.Key,
-					Value:  string(record.Value),
-					Path:   record.Path,
-					Secure: record.Metadata.Secure,
+					Key:               record.Key,
+					Value:             string(record.Value),
+					Path:              record.Path,
+					Secure:            record.Metadata.Secure,
+					TypeValidatorName: record.Metadata.TypeValidatorName,
 				})
 			}
 		}

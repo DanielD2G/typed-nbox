@@ -51,6 +51,7 @@ func (c *DynamoDBChecker) Check() error {
 		c.config.EntryTableName,
 		c.config.TrackingEntryTableName,
 		c.config.BoxTableName,
+		c.config.TypeValidatorTableName,
 		// c.config.WebhookConfigTableName, // TODO Descomentar esto cuando se active
 	}
 

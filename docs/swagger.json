@@ -753,6 +753,221 @@
                     }
                 }
             }
+        },
+        "/api/type-validator": {
+            "get": {
+                "description": "List all type validators (built-in + custom)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "type_validator"
+                ],
+                "summary": "List all type validators",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer | Basic",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nbox_internal_domain_models.TypeValidator"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create or update a custom type validator",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "type_validator"
+                ],
+                "summary": "Create or update type validator",
+                "parameters": [
+                    {
+                        "description": "Type Validator",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nbox_internal_domain_models.TypeValidator"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer | Basic",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/type-validator/name": {
+            "get": {
+                "description": "Get details of a specific type validator",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "type_validator"
+                ],
+                "summary": "Retrieve type validator by name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "validator name",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer | Basic",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nbox_internal_domain_models.TypeValidator"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a custom type validator",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "type_validator"
+                ],
+                "summary": "Delete type validator",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "validator name",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer | Basic",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -804,6 +1019,10 @@
                     "type": "boolean",
                     "example": false
                 },
+                "type_validator_name": {
+                    "type": "string",
+                    "example": "json"
+                },
                 "value": {
                     "type": "string",
                     "example": "value 123"
@@ -847,6 +1066,19 @@
                 },
                 "value": {
                     "type": "string"
+                }
+            }
+        },
+        "nbox_internal_domain_models.TypeValidator": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "email"
+                },
+                "regex": {
+                    "type": "string",
+                    "example": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
                 }
             }
         },

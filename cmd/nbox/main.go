@@ -75,12 +75,14 @@ func main() {
 		fx.Provide(amazonaws.NewS3TemplateStore),
 		fx.Provide(amazonaws.NewDynamodbBackend),
 		fx.Provide(amazonaws.NewSecureParameterStore),
+		fx.Provide(amazonaws.NewTypeValidatorBackend),
 
 		// Handlers
 		fx.Provide(handlers.NewEntryHandler),
 		fx.Provide(handlers.NewBoxHandler),
 		fx.Provide(handlers.NewStaticHandler),
 		fx.Provide(handlers.NewUIHandler),
+		fx.Provide(handlers.NewTypeValidatorHandler),
 
 		// Use case
 		fx.Provide(usecases.NewPathUseCase),
