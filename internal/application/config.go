@@ -7,6 +7,24 @@ import (
 	"strings"
 )
 
+type CredentialsSource string
+
+const (
+	// SourceEnvVar carga credenciales desde variable de entorno (desarrollo)
+	SourceEnvVar CredentialsSource = "env"
+	// SourceSecretsManager carga credenciales desde AWS Secrets Manager (producción)
+	SourceSecretsManager CredentialsSource = "secretsmanager"
+	// SourceFile carga credenciales desde archivo local (desarrollo/testing)
+	SourceFile CredentialsSource = "file"
+)
+
+type CredentialsLoaderConfig struct {
+	Source    CredentialsSource
+	EnvVarKey string // Nombre de la variable de entorno
+	SecretARN string // ARN del secreto en AWS Secrets Manager
+	FilePath  string // Ruta al archivo de credenciales
+}
+
 type Config struct {
 	BucketName             string   `pkl:"bucketName"`
 	EntryTableName         string   `pkl:"entryTableName"`
@@ -19,43 +37,8 @@ type Config struct {
 	DefaultPrefix          string   `pkl:"defaultPrefix"`
 	AllowedPrefixes        []string `pkl:"allowedPrefixes"`
 	HmacSecretKey          []byte
+	CredentialsLoader      CredentialsLoaderConfig
 }
-
-//func NewConfigFromPkl()  {
-//	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
-//	if err != nil {
-//		panic(err)
-//	}
-//	defer func(e pkl.Evaluator) {
-//		_ = e.Close()
-//	}(evaluator)
-//
-//	var cfg Config
-//	if err = evaluator.EvaluateModule(context.Background(), pkl.FileSource("config.pkl"), &cfg); err != nil {
-//		panic(err)
-//	}
-//	return &cfg
-//}
-
-//func NewConfigFromYaml()  {
-//	config := &Config{}
-//
-//	viper.SetConfigName(ConfigName)
-//	viper.SetConfigType("yaml")
-//	viper.AddConfigPath(ConfigPath)
-//
-//	err := viper.ReadInConfig()
-//	if err != nil { // Handle errs reading the config file
-//		panic(fmt.Errorf("fatal error config file: %w", err))
-//	}
-//
-//	err = viper.Unmarshal(&config)
-//	if err != nil {
-//		log.Error("Environment can't be loaded", zap.Error(err))
-//	}
-//
-//	return config
-//}
 
 // #nosec G101
 const EnvCredentials = "NBOX_BASIC_AUTH_CREDENTIALS"
@@ -72,6 +55,15 @@ func NewConfigFromEnv() *Config {
 		strings.Split(env("NBOX_ALLOWED_PREFIXES", "development/,qa/,beta/,staging/,sandbox/,production/"), ",")...,
 	)
 
+	// Configurar estrategia de carga de credenciales
+	credSource := CredentialsSource(env("NBOX_CREDENTIALS_SOURCE", "env"))
+	credConfig := CredentialsLoaderConfig{
+		Source:    credSource,
+		EnvVarKey: EnvCredentials,
+		SecretARN: env("NBOX_CREDENTIALS_SECRET_ARN", ""),
+		FilePath:  env("NBOX_CREDENTIALS_FILE", ".credentials.json"),
+	}
+
 	return &Config{
 		BucketName:             env("NBOX_BUCKET_NAME", "nbox-store"),
 		EntryTableName:         env("NBOX_ENTRIES_TABLE_NAME", "nbox-entry-table"),
@@ -83,7 +75,8 @@ func NewConfigFromEnv() *Config {
 		ParameterShortArn:      envBool("NBOX_PARAMETER_STORE_SHORT_ARN"),
 		DefaultPrefix:          defaultPrefix,
 		AllowedPrefixes:        prefixes,
-		HmacSecretKey:          []byte(env("HMAC_SECRET_KEY", "2oxgr3!laxu&66(7$3$yzmblz4wpo_0yhlluo-n*ji&3_zr39e-")),
+		HmacSecretKey:          []byte(env("HMAC_SECRET_KEY", "")),
+		CredentialsLoader:      credConfig,
 	}
 }
 
@@ -94,15 +87,6 @@ func env(key string, defaultValue string) string {
 	}
 	return value
 }
-
-//func envInt(key string, defaultValue int) int {
-//	value := env(key, fmt.Sprint(defaultValue))
-//	valueInt, err := strconv.Atoi(value)
-//	if err != nil {
-//		return defaultValue
-//	}
-//	return valueInt
-//}
 
 func envBool(key string) bool {
 	s := env(key, "false")

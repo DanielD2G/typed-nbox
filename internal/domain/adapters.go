@@ -53,3 +53,7 @@ type WebhookRepository interface {
 type EventPublisher interface {
 	Publish(ctx context.Context, event Event[json.RawMessage]) error
 }
+
+type ExportAdapter interface {
+	Export(ctx context.Context, entries []models.Entry, options models.ExportOptions) ([]byte, error)
+}

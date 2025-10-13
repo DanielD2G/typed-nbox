@@ -40,6 +40,7 @@ type Params struct {
 	SSMChecker      *amazonaws.SSMChecker
 	EventBroker     *sse.EventBroker
 	UI              *handlers.UIHandler
+	Export          *handlers.ExportHandler
 }
 
 // NewHttpApi
@@ -53,6 +54,11 @@ type Params struct {
 // @host
 // @BasePath  /
 // @securityDefinitions.basic  BasicAuth
+// @securityDefinitions.apikey BearerAuth
+// @tokenUrl /api/auth/token
+// @in header
+// @name Authorization
+// @description Bearer token authentication. Enter your JWT token in the format: Bearer {token}
 // @openapi 3.0.0
 func NewHttpApi(params Params) {
 	base := []middleware.Middleware{
@@ -111,6 +117,7 @@ func NewHttpApi(params Params) {
 	api.HandleFunc("POST /api/entry", params.Entry.Upsert)
 	api.HandleFunc("GET /api/entry/key", params.Entry.GetByKey)
 	api.HandleFunc("GET /api/entry/prefix", params.Entry.ListByPrefix)
+	api.HandleFunc("GET /api/entry/export", params.Export.Export)
 	api.HandleFunc("DELETE /api/entry/key", params.Entry.DeleteKey)
 
 	api.HandleFunc("GET /api/entry/secret-value", params.Entry.RetrieveSecretValue)
@@ -118,6 +125,8 @@ func NewHttpApi(params Params) {
 	api.HandleFunc("GET /api/track/key", params.Entry.Tracking)
 
 	api.HandleFunc("GET /api/static/environments", params.Static.Environments)
+
+	//swagger.yaml
 
 	useAuth := middleware.Chain(
 		append(

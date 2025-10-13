@@ -438,9 +438,18 @@ flowchart TD
 
 ## Security playground
 
-```shell
+### Roles
 
-```
+
+- **anonymous**: Acceso público (health checks)
+- **viewer**: Solo lectura, ambientes no productivos
+- **viewer_prod**: Solo lectura, incluye producción
+- **editor**: Lectura y escritura
+- **secrets_reader**: Puede leer valores plain de secrets (combinar con otros roles)
+- **maintainer**: Puede eliminar entries
+- **cicd**: Acceso de automatización
+- **admin**: Acceso completo
+
 
 ## stream events (SSE)
 
@@ -450,3 +459,4 @@ https://htmx.org/extensions/sse
 - [ ] Editar los roles desde una UI
 - [ ] Evitar reiniciar el servicio para recargar los cambios en los roles a los users
 - [ ] En la UI invalidar cache de los secretos despues de actualizar
+- [ ] implementar kebab-case para la keys
