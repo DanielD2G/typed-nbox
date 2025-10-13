@@ -32,8 +32,9 @@ func NewBoxHandler(store domain.TemplateAdapter, boxUseCase *usecases.BoxUseCase
 // @Tags templates
 // @Accept json
 // @Produce json
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Param data body CommandBox true "Upsert template"
-// @Param authorization header string true "Bearer | Basic"
 // @Success 200 {object} []string ""
 // @Failure 400 {object} problem.ProblemDetail "Bad Request"
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
@@ -61,7 +62,8 @@ func (b *BoxHandler) UpsertBox(w http.ResponseWriter, r *http.Request) {
 // @Param service path string true "service name"
 // @Param stage path string true "stage"
 // @Param template path string true "template name"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object}  object{exit=bool} ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"
@@ -90,7 +92,8 @@ func (b *BoxHandler) Exist(w http.ResponseWriter, r *http.Request) {
 // @Param service path string true "service name"
 // @Param stage path string true "stage"
 // @Param template path string true "template name"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object}  string ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"
@@ -121,7 +124,8 @@ func (b *BoxHandler) Retrieve(w http.ResponseWriter, r *http.Request) {
 // @Param service path string true "service name"
 // @Param stage path string true "stage"
 // @Param template path string true "template name"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object}  string ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"
@@ -157,7 +161,8 @@ func (b *BoxHandler) Build(w http.ResponseWriter, r *http.Request) {
 // @Tags templates
 // @Accept json
 // @Produce json
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object} []models.Box ""
 // @Failure 400 {object} problem.ProblemDetail "Bad Request"
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
@@ -182,7 +187,8 @@ func (b *BoxHandler) List(w http.ResponseWriter, r *http.Request) {
 // @Param service path string true "service name"
 // @Param stage path string true "stage"
 // @Param template path string true "template name"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object}  []string ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"

@@ -141,12 +141,6 @@ paths:
       consumes:
       - application/json
       description: all templates
-      parameters:
-      - description: Bearer | Basic
-        in: header
-        name: authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -168,6 +162,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: List templates
       tags:
       - templates
@@ -182,11 +179,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/internal_entrypoints_api_handlers.CommandBox'
-      - description: Bearer | Basic
-        in: header
-        name: authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -208,6 +200,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Upsert templates
       tags:
       - templates
@@ -230,11 +225,6 @@ paths:
         name: template
         required: true
         type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
-        required: true
-        type: string
       produces:
       - text/plain
       responses:
@@ -250,6 +240,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Retrieve template
       tags:
       - templates
@@ -273,11 +266,6 @@ paths:
         name: template
         required: true
         type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -296,6 +284,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Exist template
       tags:
       - templates
@@ -318,11 +309,6 @@ paths:
         name: template
         required: true
         type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
-        required: true
-        type: string
       produces:
       - text/plain
       responses:
@@ -338,6 +324,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Build template
       tags:
       - templates
@@ -360,11 +349,6 @@ paths:
         name: template
         required: true
         type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -382,6 +366,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: List vars template
       tags:
       - templates
@@ -399,11 +386,6 @@ paths:
           items:
             $ref: '#/definitions/nbox_internal_domain_models.Entry'
           type: array
-      - description: Bearer | Basic
-        in: header
-        name: authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -425,9 +407,79 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Upsert entries
       tags:
       - entry
+  /api/entry/export:
+    get:
+      description: |-
+        Export entries in different formats (JSON, YAML, dotenv, ECS tack definition) for backup or migration purposes
+        Requires authentication via Bearer token
+      parameters:
+      - description: 'Prefix to filter entries (required). Example: ''production/'',
+          ''staging/myapp/'''
+        in: query
+        name: prefix
+        required: true
+        type: string
+      - default: json
+        description: Output format
+        enum:
+        - json
+        - yaml
+        - dotenv
+        - ecs
+        in: query
+        name: format
+        type: string
+      produces:
+      - application/json
+      - application/x-yaml
+      - text/plain
+      responses:
+        "200":
+          description: Exported file with entries
+          headers:
+            Content-Disposition:
+              description: attachment; filename=nbox-export-{prefix}-{timestamp}.{ext}
+              type: string
+            X-Export-Count:
+              description: Number of entries exported
+              type: string
+            X-Export-Size:
+              description: Size in bytes of exported file
+              type: string
+          schema:
+            type: file
+        "400":
+          description: Invalid parameters (missing prefix or invalid format)
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "401":
+          description: Unauthorized - Missing or invalid token
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "403":
+          description: Forbidden - Insufficient permissions
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "404":
+          description: No entries found with specified prefix
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
+      summary: Export configuration entries
+      tags:
+      - export
   /api/entry/key:
     delete:
       description: delete keys & children
@@ -435,11 +487,6 @@ paths:
       - description: key path
         in: query
         name: v
-        required: true
-        type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
         required: true
         type: string
       produces:
@@ -460,6 +507,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Delete
       tags:
       - entry
@@ -469,11 +519,6 @@ paths:
       - description: key path
         in: query
         name: v
-        required: true
-        type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
         required: true
         type: string
       produces:
@@ -491,6 +536,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Retrieve key
       tags:
       - entry
@@ -501,11 +549,6 @@ paths:
       - description: key path
         in: query
         name: v
-        required: true
-        type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
         required: true
         type: string
       produces:
@@ -525,6 +568,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Filter by prefix
       tags:
       - entry
@@ -535,11 +581,6 @@ paths:
       - description: key path
         in: query
         name: v
-        required: true
-        type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
         required: true
         type: string
       produces:
@@ -561,6 +602,9 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: Retrieve secret value
       tags:
       - entry
@@ -571,11 +615,6 @@ paths:
       - description: key path
         in: query
         name: v
-        required: true
-        type: string
-      - description: Bearer | Basic
-        in: header
-        name: authorization
         required: true
         type: string
       produces:
@@ -595,10 +634,19 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/problem.ProblemDetail'
+      security:
+      - BasicAuth: []
+      - BearerAuth: []
       summary: History
       tags:
       - entry
 securityDefinitions:
   BasicAuth:
     type: basic
+  BearerAuth:
+    description: 'Bearer token authentication. Enter your JWT token in the format:
+      Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

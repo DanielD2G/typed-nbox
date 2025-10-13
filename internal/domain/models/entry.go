@@ -5,11 +5,18 @@ import (
 	"time"
 )
 
+type EntryOutput struct {
+	Key    string `json:"key" yaml:"key" example:"development/service/var-example"`
+	Value  string `json:"value" yaml:"value" example:"value 123"`
+	Secure bool   `json:"secure" yaml:"secure" example:"false"`
+}
+
 type Entry struct {
-	Path   string `json:"path,omitempty" swaggerignore:"true"`
-	Key    string `json:"key" example:"development/service/var-example"`
-	Value  string `json:"value" example:"value 123"`
-	Secure bool   `json:"secure" example:"false"`
+	Path   string `json:"path,omitempty" yaml:"path,omitempty" swaggerignore:"true"`
+	Key    string `json:"key" yaml:"key" example:"development/service/var-example"`
+	Value  string `json:"value" yaml:"value" example:"value 123"`
+	Secure bool   `json:"secure" yaml:"secure" example:"false"`
+	//Metadata *Metadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 func (e *Entry) String() string {
