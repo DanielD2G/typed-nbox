@@ -2,13 +2,13 @@ package domain
 
 import (
 	"context"
-	"errors"
 )
 
-var (
-	ErrUserNotFound    = errors.New("user not found")
-	ErrInvalidPassword = errors.New("invalid password") // ✅ Nuevo error específico
-)
+//
+//var (
+//	ErrUserNotFound    = errors.New("user not found")
+//	ErrInvalidPassword = errors.New("invalid password") // ✅ Nuevo error específico
+//)
 
 type User struct {
 	Username string

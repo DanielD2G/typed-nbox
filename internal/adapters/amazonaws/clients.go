@@ -2,6 +2,7 @@ package amazonaws
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 
@@ -12,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
-func NewAwsConfig() *aws.Config {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithDefaultRegion("us-east-1"))
+func NewAwsConfig() (*aws.Config, error) {
+	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithDefaultRegion("us-east-1"))
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("fallo al cargar config de AWS: %w", err)
 	}
-	return &cfg
+	return &cfg, nil
 }
 
 func NewS3Client(cfg *aws.Config) *s3.Client {

@@ -73,6 +73,14 @@ const docTemplate = `{
         },
         "/api/box": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "all templates",
                 "consumes": [
                     "application/json"
@@ -84,15 +92,6 @@ const docTemplate = `{
                     "templates"
                 ],
                 "summary": "List templates",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -124,6 +123,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "insert or update templates on s3",
                 "consumes": [
                     "application/json"
@@ -144,13 +151,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/internal_entrypoints_api_handlers.CommandBox"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -186,6 +186,14 @@ const docTemplate = `{
         },
         "/api/box/{service}/{stage}/{template}": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "detail",
                 "produces": [
                     "text/plain"
@@ -215,13 +223,6 @@ const docTemplate = `{
                         "name": "template",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -246,6 +247,14 @@ const docTemplate = `{
                 }
             },
             "head": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Check the existence of the template",
                 "consumes": [
                     "application/json"
@@ -278,13 +287,6 @@ const docTemplate = `{
                         "name": "template",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -316,6 +318,14 @@ const docTemplate = `{
         },
         "/api/box/{service}/{stage}/{template}/build": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "replace vars patterns",
                 "produces": [
                     "text/plain"
@@ -345,13 +355,6 @@ const docTemplate = `{
                         "name": "template",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -378,6 +381,14 @@ const docTemplate = `{
         },
         "/api/box/{service}/{stage}/{template}/vars": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "show all vars in template",
                 "produces": [
                     "application/json"
@@ -406,13 +417,6 @@ const docTemplate = `{
                         "description": "template name",
                         "name": "template",
                         "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
                         "required": true
                     }
                 ],
@@ -443,6 +447,14 @@ const docTemplate = `{
         },
         "/api/entry": {
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "insert / update vars",
                 "consumes": [
                     "application/json"
@@ -466,13 +478,6 @@ const docTemplate = `{
                                 "$ref": "#/definitions/nbox_internal_domain_models.Entry"
                             }
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -506,8 +511,112 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/entry/export": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Export entries in different formats (JSON, YAML, dotenv, ECS tack definition) for backup or migration purposes\nRequires authentication via Bearer token",
+                "produces": [
+                    "application/json",
+                    "application/x-yaml",
+                    "text/plain"
+                ],
+                "tags": [
+                    "export"
+                ],
+                "summary": "Export configuration entries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prefix to filter entries (required). Example: 'production/', 'staging/myapp/'",
+                        "name": "prefix",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "json",
+                            "yaml",
+                            "dotenv",
+                            "ecs"
+                        ],
+                        "type": "string",
+                        "default": "json",
+                        "description": "Output format",
+                        "name": "format",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Exported file with entries",
+                        "schema": {
+                            "type": "file"
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "type": "string",
+                                "description": "attachment; filename=nbox-export-{prefix}-{timestamp}.{ext}"
+                            },
+                            "X-Export-Count": {
+                                "type": "string",
+                                "description": "Number of entries exported"
+                            },
+                            "X-Export-Size": {
+                                "type": "string",
+                                "description": "Size in bytes of exported file"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parameters (missing prefix or invalid format)",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "No entries found with specified prefix",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/problem.ProblemDetail"
+                        }
+                    }
+                }
+            }
+        },
         "/api/entry/key": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "detail",
                 "produces": [
                     "application/json"
@@ -522,13 +631,6 @@ const docTemplate = `{
                         "description": "key path",
                         "name": "v",
                         "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
                         "required": true
                     }
                 ],
@@ -554,6 +656,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "delete keys \u0026 children",
                 "produces": [
                     "application/json"
@@ -568,13 +678,6 @@ const docTemplate = `{
                         "description": "key path",
                         "name": "v",
                         "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
                         "required": true
                     }
                 ],
@@ -607,6 +710,14 @@ const docTemplate = `{
         },
         "/api/entry/prefix": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "list all keys by path",
                 "produces": [
                     "application/json"
@@ -621,13 +732,6 @@ const docTemplate = `{
                         "description": "key path",
                         "name": "v",
                         "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
                         "required": true
                     }
                 ],
@@ -658,6 +762,14 @@ const docTemplate = `{
         },
         "/api/entry/secret-value": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "plain value",
                 "produces": [
                     "application/json"
@@ -672,13 +784,6 @@ const docTemplate = `{
                         "description": "key path",
                         "name": "v",
                         "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
                         "required": true
                     }
                 ],
@@ -712,6 +817,14 @@ const docTemplate = `{
         },
         "/api/track/key": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "history changes",
                 "produces": [
                     "application/json"
@@ -726,13 +839,6 @@ const docTemplate = `{
                         "description": "key path",
                         "name": "v",
                         "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer | Basic",
-                        "name": "authorization",
-                        "in": "header",
                         "required": true
                     }
                 ],
@@ -1127,6 +1233,12 @@ const docTemplate = `{
     "securityDefinitions": {
         "BasicAuth": {
             "type": "basic"
+        },
+        "BearerAuth": {
+            "description": "Bearer token authentication. Enter your JWT token in the format: Bearer {token}",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

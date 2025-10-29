@@ -30,7 +30,8 @@ func NewEntryHandler(entryAdapter domain.EntryAdapter, secretAdapter domain.Secr
 // @Accept json
 // @Produce json
 // @Param data body []models.Entry true "Upsert template"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object} map[string]string ""
 // @Failure 400 {object} problem.ProblemDetail "Bad Request"
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
@@ -72,7 +73,8 @@ func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 // @Tags entry
 // @Produce json
 // @Param v query string true "key path"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object} []models.Entry ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"
@@ -96,7 +98,8 @@ func (h *EntryHandler) ListByPrefix(w http.ResponseWriter, r *http.Request) {
 // @Tags entry
 // @Produce json
 // @Param v query string true "key path"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object} models.Entry ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"
@@ -119,7 +122,8 @@ func (h *EntryHandler) GetByKey(w http.ResponseWriter, r *http.Request) {
 // @Tags entry
 // @Produce json
 // @Param v query string true "key path"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object} object{message=string} ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"
@@ -142,7 +146,8 @@ func (h *EntryHandler) DeleteKey(w http.ResponseWriter, r *http.Request) {
 // @Tags entry
 // @Produce json
 // @Param v query string true "key path"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object} []models.Tracking ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 500 {object} problem.ProblemDetail "Internal error"
@@ -166,7 +171,8 @@ func (h *EntryHandler) Tracking(w http.ResponseWriter, r *http.Request) {
 // @Tags entry
 // @Produce json
 // @Param v query string true "key path"
-// @Param authorization header string true "Bearer | Basic"
+// @Security 	 BasicAuth
+// @Security 	 BearerAuth
 // @Success 200 {object} models.Entry ""
 // @Failure 401 {object} problem.ProblemDetail "Unauthorized"
 // @Failure 404 {object} problem.ProblemDetail "Not found"

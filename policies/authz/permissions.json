@@ -1,22 +1,79 @@
 {
   "permissions": {
-    "super-admin": ["(GET|POST|PUT|DELETE|HEAD):/.*"],
-    "open": ["^GET:/health$", "^GET:/test$"],
+    "admin:full_access": {
+      "description": "Full access to all resources",
+      "patterns": ["(GET|POST|PUT|DELETE|HEAD):/.*"]
+    },
 
-    "templates.view_all": [ "^GET:/api/box$", "^GET:/api/box/(.*)/(.*)/(.*)$"],
-    "templates.get_non_production": ["^GET:/api/box/(.*)/(qa|development)/[^/]+\\.json$"],
-    "templates.view_exist": ["^HEAD:/api/box/(.*)/(.*)/(.*)"],
-    "templates.view_build": ["^GET:/api/box/(.*)/(.*)/(.*)/build$"],
-    "templates.view_vars": ["^GET:/api/box/(.*)/(.*)/(.*)/vars$"],
-    "templates.upsert_all": ["^POST:/api/box$"],
+    "public:health": {
+      "description": "Health check endpoints",
+      "patterns": ["^GET:/health$", "^GET:/test$"]
+    },
 
-    "entry.upsert": ["^POST:/api/entry$"],
-    "entry-key.view_development_qa_global": ["^GET:/api/entry/key\\?v=(development|qa|global)/(.*)"],
-    "entry-key.view_all": ["^GET:/api/entry/key\\?v=(.*)"],
-    "entry-key.delete_all": ["^DELETE:/api/entry/key\\?v=(.*)"],
-    "entry-prefix.view_development_qa_global": ["^GET:/api/entry/prefix\\?v=(development|qa|global)/(.*)"],
-    "entry-prefix.view_all": ["^GET:/api/entry/prefix\\?v=(.*)"],
+    "templates:read": {
+      "description": "Read all templates",
+      "patterns": [
+        "^GET:/api/box$",
+        "^GET:/api/box/(.*)/(.*)/(.*)$",
+        "^HEAD:/api/box/(.*)/(.*)/(.*)"
+      ]
+    },
+    "templates:read:non_production": {
+      "description": "Read templates only from QA and development",
+      "patterns": ["^GET:/api/box/(.*)/(qa|development)/[^/]+\\.json$"]
+    },
+    "templates:read:build": {
+      "description": "View template build output",
+      "patterns": ["^GET:/api/box/(.*)/(.*)/(.*)/build$"]
+    },
+    "templates:read:vars": {
+      "description": "View template variables",
+      "patterns": ["^GET:/api/box/(.*)/(.*)/(.*)/vars$"]
+    },
+    "templates:write": {
+      "description": "Create/update templates",
+      "patterns": ["^POST:/api/box$"]
+    },
 
-    "entry-key.retrieve-secret-value":  ["^GET:/api/entry/secret-value\\?v=(.*)"]
+    "entries:read:key": {
+      "description": "Read individual entry by key",
+      "patterns": ["^GET:/api/entry/key\\?v=(.*)"]
+    },
+    "entries:read:key:non_production": {
+      "description": "Read entries only from development, QA, and global",
+      "patterns": ["^GET:/api/entry/key\\?v=(development|qa|global)/(.*)"]
+    },
+    "entries:read:prefix": {
+      "description": "List entries by prefix",
+      "patterns": ["^GET:/api/entry/prefix\\?v=(.*)"]
+    },
+    "entries:read:prefix:non_production": {
+      "description": "List entries only from development, QA, and global",
+      "patterns": ["^GET:/api/entry/prefix\\?v=(development|qa|global)/(.*)"]
+    },
+    "entries:read:export": {
+      "description": "Export entries",
+      "patterns": ["^GET:/api/entry/export\\?(.*)"]
+    },
+
+    "entries:write": {
+      "description": "Create/update entries",
+      "patterns": ["^POST:/api/entry$"]
+    },
+
+    "entries:delete": {
+      "description": "Delete entries",
+      "patterns": ["^DELETE:/api/entry/key\\?v=(.*)"]
+    },
+
+    "secrets:read:value": {
+      "description": "Retrieve plain secret values (sensitive)",
+      "patterns": ["^GET:/api/entry/secret-value\\?v=(.*)"]
+    },
+
+    "tracking:read": {
+      "description": "View entry history",
+      "patterns": ["^GET:/api/track/key\\?v=(.*)"]
+    }
   }
 }
