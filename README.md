@@ -114,6 +114,49 @@ curl -X GET "http://localhost:7337/api/entry/secret-value?v=global/example/email
     --user "user:pass" | jq
 ```
 
+#### `GET /api/entry/export`
+Exporta todas las variables bajo un prefijo en diferentes formatos (JSON, YAML, dotenv, ECS Task Definition). Útil para respaldos, migraciones o integración con otros sistemas.
+
+**Parámetros:**
+- `prefix` (requerido): Prefijo para filtrar las variables a exportar
+- `format` (opcional): Formato de salida. Valores: `json`, `yaml`, `dotenv`, `ecs`. Por defecto: `json`
+
+**Formatos disponibles:**
+- `json`: Exporta como array JSON con todos los campos
+- `yaml`: Exporta en formato YAML
+- `dotenv`: Exporta como archivo `.env` (KEY=VALUE)
+- `ecs`: Exporta como definición de variables de entorno para ECS Task Definition
+
+**Ejemplo - Exportar como JSON:**
+```shell
+curl -X GET "http://localhost:7337/api/entry/export?prefix=production/myapp&format=json" \
+    --user "user:pass" -o backup.json
+```
+
+**Ejemplo - Exportar como .env:**
+```shell
+curl -X GET "http://localhost:7337/api/entry/export?prefix=development/myapp&format=dotenv" \
+    --user "user:pass" -o .env
+```
+
+**Ejemplo - Exportar como YAML:**
+```shell
+curl -X GET "http://localhost:7337/api/entry/export?prefix=staging/myapp&format=yaml" \
+    --user "user:pass" -o config.yaml
+```
+
+**Ejemplo - Exportar para ECS Task Definition:**
+```shell
+# Este formato genera el array de environment variables listo para usar en ECS
+curl -X GET "http://localhost:7337/api/entry/export?prefix=production/myapp&format=ecs" \
+    --user "user:pass" -o ecs-env.json
+```
+
+> **Nota**: El archivo descargado incluirá headers con información útil:
+> - `X-Export-Count`: Número de variables exportadas
+> - `X-Export-Size`: Tamaño del archivo en bytes
+> - `Content-Disposition`: Nombre sugerido del archivo con timestamp
+
 ### Gestión de Plantillas (Templates)
 
 #### `POST /api/box`
