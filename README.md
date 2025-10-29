@@ -574,18 +574,6 @@ flowchart TD
     class STATUS,LOGS health
 ```
 
-## Security playground
-
-```shell
-
-```
-
-## stream events (SSE)
-
-https://htmx.org/extensions/sse
-
----
-
 ## 🎯 Casos de Uso de Type Validators
 
 ### Ejemplo 1: Configuración de una API con validación
