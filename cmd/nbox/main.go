@@ -83,11 +83,13 @@ func main() {
 		fx.Provide(handlers.NewStaticHandler),
 		fx.Provide(handlers.NewUIHandler),
 		fx.Provide(handlers.NewTypeValidatorHandler),
+		fx.Provide(handlers.NewExportHandler),
 
 		// Use case
 		fx.Provide(usecases.NewPathUseCase),
 		fx.Provide(usecases.NewEntryUseCase),
 		fx.Provide(usecases.NewBox),
+		fx.Provide(usecases.NewExportUseCase),
 
 		fx.Decorate(usecases.NewEntryUseCaseWithEvents),
 		fx.Provide(usecases.NewEventUseCase),

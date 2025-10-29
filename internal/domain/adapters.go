@@ -61,3 +61,7 @@ type TypeValidatorAdapter interface {
 	List(ctx context.Context) ([]models.TypeValidator, error)
 	Delete(ctx context.Context, name string) error
 }
+
+type ExportAdapter interface {
+	Export(ctx context.Context, entries []models.Entry, options models.ExportOptions) ([]byte, error)
+}

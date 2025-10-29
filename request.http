@@ -15,7 +15,7 @@ Content-Type: application/json
 
 ### create template
 POST {{baseUrl}}/api/box
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -47,7 +47,7 @@ Content-Type: application/json
 
 ### check exist template
 HEAD {{baseUrl}}/api/box/widget-x/development/task_definition.json
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 
@@ -71,7 +71,7 @@ Content-Type: application/json
 
 ### create
 POST {{baseUrl}}/api/entry
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 [
@@ -81,7 +81,7 @@ Content-Type: application/json
 
 ### testing create
 POST {{baseUrl}}/api/entry
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 [
@@ -109,7 +109,7 @@ Content-Type: application/json
 
 ### Get key
 GET {{baseUrl}}/api/entry/key?v=global/example/debug
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 
@@ -122,16 +122,23 @@ Authorization: Bearer {{token}}
 ### list tracking history
 GET {{baseUrl}}/api/track/key?v=global/example/unique-key6
 Content-Type: application/json
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 
 
 
 ### all environments
 GET {{baseUrl}}/api/static/environments
 Content-Type: application/json
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
 
 ### Delete key
 DELETE {{baseUrl}}/api/entry/key?v=widget-x/development3
-Authorization: Basic {{user}} {{pass}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+
+### Export entries
+GET {{baseUrl}}/api/entry/export?prefix=global/example&format=ecs
+Authorization: Bearer {{token}}
 Content-Type: application/json
